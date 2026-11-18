@@ -11,7 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="locked">
+  <div id="auth-root"></div>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#overview" aria-label="UXDriven Social Studio — início">
@@ -48,7 +49,7 @@
     <div class="main-area">
       <header class="topbar">
         <div class="top-left"><button class="icon-button mobile-menu" id="mobile-menu" aria-label="Abrir menu"><svg class="icon"><use href="#i-menu"></use></svg></button><span class="overline">UXDRIVEN / SOCIAL STUDIO</span><span class="crumb-divider">/</span><span id="breadcrumb">VISÃO GERAL</span><span class="top-live"><i></i> WORKSPACE ATIVO</span></div>
-        <div class="top-actions"><span class="prototype-label">● PROTÓTIPO INTERATIVO</span><button class="icon-button" id="search-btn" aria-label="Buscar conteúdo" title="Buscar conteúdo"><svg class="icon"><use href="#i-search"></use></svg></button><button class="icon-button notification-button" id="notification-btn" aria-label="Ver notificações"><svg class="icon"><use href="#i-bell"></use></svg><i></i></button><div class="top-avatar">VL</div></div>
+        <div class="top-actions"><span class="prototype-label">● PROTÓTIPO INTERATIVO</span><button class="icon-button" id="search-btn" aria-label="Buscar conteúdo" title="Buscar conteúdo"><svg class="icon"><use href="#i-search"></use></svg></button><button class="icon-button" id="ux-signout" aria-label="Sair da conta" title="Sair da conta"><svg class="icon"><use href="#i-external"></use></svg></button><button class="icon-button notification-button" id="notification-btn" aria-label="Ver notificações"><svg class="icon"><use href="#i-bell"></use></svg><i></i></button><div class="top-avatar">VL</div></div>
       </header>
       <main id="main-content" tabindex="-1"></main>
       <footer class="app-footer"><span>UXDRIVEN® SOCIAL STUDIO <span class="footer-dim">/ PRODUCT CONCEPT 2026</span></span><span>DESIGNED AROUND THE USER <b>✳</b></span></footer>
@@ -95,6 +96,7 @@
     <symbol id="i-message" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 1-8 8 9 9 0 0 1-4-.9L3 20l1.9-5A8 8 0 1 1 20 11Z"/></symbol>
     <symbol id="i-user-check" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 10-4.4M16 17l2 2 4-4"/></symbol>
   </svg>
-  <script src="./app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./boot.js" defer></script>
 </body>
 </html>
