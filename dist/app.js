@@ -297,7 +297,7 @@
       <div class="field"><label for="task-summary">Atualização visível ao cliente</label><textarea class="textarea" id="task-summary" name="publicSummary" placeholder="Resumo objetivo e sem informações internas..." required style="min-height:80px"></textarea></div>
       <div class="field"><label for="task-internal">Notas internas (não aparecem no portal)</label><textarea class="textarea" id="task-internal" name="internalNote" placeholder="Instruções internas da UXDriven..." style="min-height:75px"></textarea></div>
       <div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">${ICON('plus')} Criar demanda</button></div></form>`,true);
-    $('#task-client').value=state.client==='all'?'aurora':state.client;
+    $('#task-client').value=state.client==='all'?clients[0].id:state.client;
     $('#task-stage').value=stage;
   }
   function taskModal(id,clientMode=false){
