@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0e0d" />
+  <meta name="description" content="UXDriven Social Studio — central criativa de planejamento, aprovação e inteligência para social media." />
+  <title>UXDriven Social Studio — Creative Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#overview" aria-label="UXDriven Social Studio — início">
+        <div class="brand-icon"><span>U</span><i></i></div>
+        <div class="brand-type"><div class="brand-word">uxdriven<span>.</span><sup>®</sup></div><div class="brand-sub">SOCIAL STUDIO <span>/ BETA</span></div></div>
+      </a>
+      <div class="side-workspace">
+        <div class="ws-icon">UX</div><div class="ws-copy"><strong>UXDriven Agency</strong><small>Workspace principal</small></div>
+        <svg class="icon"><use href="#i-chevrons"></use></svg>
+      </div>
+      <div class="nav-label">PLATAFORMA <span>01—08</span></div>
+      <nav id="primary-nav" aria-label="Navegação principal">
+        <button class="nav-item active" data-view="overview"><svg class="icon"><use href="#i-grid"></use></svg>Visão geral<span class="nav-active-dot"></span></button>
+        <button class="nav-item" data-view="tasks"><svg class="icon"><use href="#i-kanban"></use></svg>Demandas<span class="nav-count" id="task-counter">5</span></button>
+        <button class="nav-item" data-view="calendar"><svg class="icon"><use href="#i-calendar"></use></svg>Calendário editorial</button>
+        <button class="nav-item" data-view="studio"><svg class="icon"><use href="#i-sparkles"></use></svg>Studio IA<span class="nav-pill">NEW</span></button>
+        <button class="nav-item" data-view="library"><svg class="icon"><use href="#i-layers"></use></svg>Biblioteca criativa</button>
+        <button class="nav-item" data-view="approvals"><svg class="icon"><use href="#i-check-circle"></use></svg>Aprovações<span class="nav-count" id="approval-counter">3</span></button>
+        <button class="nav-item" data-view="reports"><svg class="icon"><use href="#i-chart"></use></svg>Relatórios</button>
+        <button class="nav-item" data-view="agents"><svg class="icon"><use href="#i-bot"></use></svg>Agentes de IA</button>
+      </nav>
+      <div class="nav-label label-second">GESTÃO <span>WORKSPACE</span></div>
+      <nav aria-label="Gestão">
+        <button class="nav-item" data-view="clients"><svg class="icon"><use href="#i-users"></use></svg>Meus clientes</button>
+        <button class="nav-item" data-view="portal"><svg class="icon"><use href="#i-external"></use></svg>Portal do cliente<span class="nav-pill">PREVIEW</span></button>
+        <button class="nav-item" data-view="integrations"><svg class="icon"><use href="#i-link"></use></svg>Integrações</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="side-promo"><span class="mini-caption"><span class="status-pulse"></span> THE NEXT CREATIVE ERA</span><strong>Mais espaço para<br/><em>criar.</em></strong><span>Menos tempo operando.</span><button id="side-new" aria-label="Criar publicação">Começar agora <svg class="icon"><use href="#i-arrow-up-right"></use></svg></button></div>
+        <div class="user-panel"><div class="avatar">UX</div><div><strong>Equipe UXDriven</strong><small>Administrador · Demo</small></div><svg class="icon"><use href="#i-more"></use></svg></div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <header class="topbar">
+        <div class="top-left"><button class="icon-button mobile-menu" id="mobile-menu" aria-label="Abrir menu"><svg class="icon"><use href="#i-menu"></use></svg></button><span class="overline">UXDRIVEN / SOCIAL STUDIO</span><span class="crumb-divider">/</span><span id="breadcrumb">VISÃO GERAL</span><span class="top-live"><i></i> WORKSPACE ATIVO</span></div>
+        <div class="top-actions"><span class="prototype-label">● PROTÓTIPO INTERATIVO</span><button class="icon-button" id="search-btn" aria-label="Buscar conteúdo" title="Buscar conteúdo"><svg class="icon"><use href="#i-search"></use></svg></button><button class="icon-button notification-button" id="notification-btn" aria-label="Ver notificações"><svg class="icon"><use href="#i-bell"></use></svg><i></i></button><div class="top-avatar">VL</div></div>
+      </header>
+      <main id="main-content" tabindex="-1"></main>
+      <footer class="app-footer"><span>UXDRIVEN® SOCIAL STUDIO <span class="footer-dim">/ PRODUCT CONCEPT 2026</span></span><span>DESIGNED AROUND THE USER <b>✳</b></span></footer>
+    </div>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root" role="status" aria-live="polite"></div>
+
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="m12 3 1.7 6.3L20 11l-6.3 1.7L12 19l-1.7-6.3L4 11l6.3-1.7L12 3ZM19 17l.6 1.4L21 19l-1.4.6L19 21l-.6-1.4L17 19l1.4-.6L19 17Z"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 17l9 5 9-5"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18M7 16l4-5 4 3 5-7"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 7V3m-4 9h.01M16 12h.01M9 16h6"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2H3ZM17 5a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 5v1h-4"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l3-3A5 5 0 0 0 13 2.9l-1.8 1.8M14 11a5 5 0 0 0-7.1 0l-3 3A5 5 0 0 0 11 21.1l1.8-1.8"/></symbol>
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24"><path d="M5 19 19 5M7 5h12v12"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-chevrons" viewBox="0 0 24 24"><path d="m7 10 5-5 5 5M7 14l5 5 5-5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-instagram" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.8" r=".8" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-facebook" viewBox="0 0 24 24"><path d="M14 21v-8h3l.5-4H14V7c0-1 .4-1.5 1.8-1.5H18V2.2A23 23 0 0 0 15 2c-3.2 0-5 1.8-5 5v2H7v4h3v8"/></symbol>
+    <symbol id="i-linkedin" viewBox="0 0 24 24"><path d="M4 10v11M4 5v.1M10 21V10h4v2a4 4 0 0 1 7 3v6M14 13v8"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8" cy="8" r="2"/><path d="m3 17 5-5 4 4 3-3 6 6"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4 20-7ZM11 13 22 2"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 7h16M7 12h10M10 17h4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5 19 19M19 5 5 19"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="m3 17 1 4 4-1L20 8a3 3 0 0 0-4-4L3 17Z"/></symbol>
+    <symbol id="i-trending" viewBox="0 0 24 24"><path d="m3 17 6-6 4 4 8-8M15 7h6v6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2.5"/><circle cx="16" cy="17" r="2.5"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.5"/></symbol>
+    <symbol id="i-kanban" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16M5.5 8h1M11.5 8h1M17.5 8h1M5.5 12h1M11.5 12h1"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9"/><path d="M20 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 1-8 8 9 9 0 0 1-4-.9L3 20l1.9-5A8 8 0 1 1 20 11Z"/></symbol>
+    <symbol id="i-user-check" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 10-4.4M16 17l2 2 4-4"/></symbol>
+  </svg>
+  <script src="./app.js"></script>
+</body>
+</html>
