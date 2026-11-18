@@ -35,10 +35,14 @@ O código em `api/public-config.js` retorna exclusivamente URL e chave
 que esse endpoint retorne.
 
 ## 3. Configuração do Supabase Auth
+
+O domínio de validação associado à branch `feat/auth-live-supabase` é:
+`https://login-uxdsocialstudio.vercel.app` (Preview). Antes de usá-lo em recuperação de senha, confirme que abre o deployment correto. Ao promover a aplicação para produção, remova a associação de Preview e configure o domínio para `main` / Production, junto com as variáveis de produção.
+
 Em **Authentication → URL Configuration**:
 - Site URL: `https://social-studio-sage.vercel.app`.
-- Adicionar os URLs de Preview especificamente usados nos testes, caso
-  habilite links e redirecionamentos por e-mail.
+- Adicionar `https://login-uxdsocialstudio.vercel.app/**` aos Redirect URLs permitidos para fluxos futuros de e-mail e recuperação de senha; mantenha Site URL de produção conforme a estratégia de publicação.
+- Não utilizar dados reais de clientes no ambiente Preview.
 - Para login com e-mail/senha pré-criado no dashboard não há OAuth a configurar.
 
 ## 4. Primeiro teste controlado
