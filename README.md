@@ -69,6 +69,11 @@ Abra `http://localhost:3000`.
 
 Arquitetura e recorte sugeridos em [docs/PRODUCT_BLUEPRINT.md](docs/PRODUCT_BLUEPRINT.md).
 
+O primeiro esquema PostgreSQL com isolamento por organização e cliente está em
+[`supabase/migrations/`](supabase/migrations/). Antes de aplicá-lo ao banco,
+leia [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md). A migração não ativa o
+backend na interface estática automaticamente.
+
 ---
 
 UXDriven · Design orientado às pessoas.
