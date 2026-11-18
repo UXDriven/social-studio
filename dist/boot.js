@@ -4,20 +4,58 @@
   const esc = x => String(x ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" })[c]);
   function screen(kicker, title, description, body="") {
     root.hidden=false;
-    root.innerHTML=`<main class="auth-page"><section class="auth-panel"><div class="auth-logo">UX<span>✳</span></div><div class="auth-kicker">${kicker}</div><h1>${title}</h1><p>${description}</p>${body}<small class="auth-footer">UXDRIVEN® SOCIAL STUDIO / SECURE WORKSPACE</small></section></main>`;
+    root.innerHTML=`<main class="auth-page">
+      <div class="auth-background-grid" aria-hidden="true"></div>
+      <div class="auth-container">
+        <section class="auth-editorial" aria-label="Universo UXDriven">
+          <a class="auth-brand" href="https://uxdriven-lab.vercel.app/" target="_blank" rel="noopener" aria-label="UXDriven — site institucional">
+            <img src="./assets/uxdriven-logo.svg" width="44" height="44" alt="">
+            <span>uxdriven<span class="auth-period">.</span></span><sup>®</sup>
+          </a>
+          <div class="auth-editorial-body">
+            <div class="auth-eyebrow"><span class="auth-pulse"></span> CREATIVE TECHNOLOGY STUDIO <i></i> BRASIL / WORLDWIDE</div>
+            <h2>Design que entende <em>pessoas.</em><br>Operações que movem <span class="auth-outline">ideias.</span></h2>
+            <p>A experiência é o ponto de partida. Planejamento, criação e colaboração integrados em um só universo.</p>
+            <div class="auth-visual" aria-hidden="true">
+              <div class="auth-orbit auth-orbit-one"></div><div class="auth-orbit auth-orbit-two"></div>
+              <div class="auth-visual-card"><span>UX / SOCIAL STUDIO</span><strong>make it<br><em>matter.</em></strong><small>CONTENT / WORKFLOW / INTELLIGENCE</small></div>
+              <div class="auth-floating-pill auth-pill-a">✳ CREATIVE SYSTEMS</div>
+              <div class="auth-floating-pill auth-pill-b"><span></span> WORKSPACE CONNECTED</div>
+            </div>
+          </div>
+          <div class="auth-editorial-footer"><span>DESIGN × CÓDIGO × INTELIGÊNCIA</span><span>MADE FOR HUMANS · © 2026</span></div>
+        </section>
+        <section class="auth-panel">
+          <div class="auth-panel-top"><span>UXDRIVEN® / SOCIAL STUDIO</span><span>PRIVATE WORKSPACE / 01</span></div>
+          <div class="auth-panel-body">
+            <div class="auth-kicker">${esc(kicker)}</div>
+            <h1>${title}</h1><p class="auth-panel-description">${esc(description)}</p>${body}
+          </div>
+          <div class="auth-footer"><span>SECURE CREATIVE OPERATIONS</span><span>DESIGNED AROUND THE USER <b>✳</b></span></div>
+        </section>
+      </div>
+    </main>`;
   }
   const btn=(id,txt)=>`<button id="${id}" class="auth-submit">${txt}</button>`;
   screen("INICIALIZANDO", "Conectando seu <em>workspace.</em>", "Validando sessão e permissões.");
   try {
     const configResp=await fetch("/api/public-config",{cache:"no-store"});
+    const cfg=await configResp.json().catch(()=>({}));
     if(!configResp.ok) {
-      screen("CONFIGURAÇÃO NECESSÁRIA","Conecte o <em>Supabase.</em>",
-        "Faltam as variáveis de ambiente públicas no projeto da Vercel.",
-        `<div class="auth-alert">Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY no ambiente Production e faça Redeploy.</div>${btn("retry","Verificar novamente")}`);
+      const envName=cfg.environment==="preview"?"Preview":cfg.environment==="production"?"Production":cfg.environment==="development"?"Development":"não identificado";
+      const missing=Array.isArray(cfg.missing)?cfg.missing.filter(v=>["SUPABASE_URL","SUPABASE_PUBLISHABLE_KEY"].includes(v)):[];
+      const issue=cfg.error==="invalid_url"?"A URL do Supabase foi informada em formato inválido.":
+        cfg.error==="invalid_publishable_key"?"A chave informada não é uma chave pública válida.":
+        missing.length?"Estão ausentes neste deployment: "+missing.join(" e ")+".":"A função de configuração não retornou uma resposta válida.";
+      screen("CONEXÃO / AMBIENTE", "Estamos quase <em>conectados.</em>",
+        "O deployment ainda não recebeu uma configuração pública válida do Supabase.",
+        `<div class="auth-alert" role="alert"><strong>Ambiente detectado: ${esc(envName)}</strong><span>${esc(issue)}</span></div>
+        <p class="auth-helper">Confira as variáveis em Vercel → Social Studio → Settings → Environment Variables.
+        Elas precisam estar no <strong>mesmo ambiente deste deployment</strong>. Depois, gere um novo deployment da branch de teste.</p>
+        ${btn("retry","Verificar novamente ↗")}`);
       document.getElementById("retry").onclick=()=>location.reload();
       return;
     }
-    const cfg=await configResp.json();
     if(!cfg.configured||!window.supabase?.createClient) throw new Error("Configuração ou SDK indisponível.");
     const db=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}});
     const signOut=async()=>{await db.auth.signOut();location.reload();};
