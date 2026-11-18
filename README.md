@@ -74,6 +74,16 @@ O primeiro esquema PostgreSQL com isolamento por organização e cliente está e
 leia [docs/SUPABASE_SETUP.md](docs/SUPABASE_SETUP.md). A migração não ativa o
 backend na interface estática automaticamente.
 
+## MVP com login e dados reais (branch de implementação)
+
+A primeira versão conectada usa Supabase Auth e PostgreSQL para clientes e demandas.
+Ela adiciona um endpoint Vercel que expõe apenas a URL e chave **publishable**
+do projeto; nenhum segredo precisa ser colocado no GitHub.
+
+**Antes de publicar**, siga [docs/LOGIN_MVP.md](docs/LOGIN_MVP.md) para configurar
+`SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` no projeto da Vercel e testar o
+login em um Preview. O cliente externo continua como prévia, sem aprovação real.
+
 ---
 
 UXDriven · Design orientado às pessoas.
