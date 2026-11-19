@@ -54,6 +54,31 @@ on conflict (client_id, user_id) do nothing;
 - [ ] Notas internas jamais aparecem no portal ou nas respostas de rede ao login de cliente.
 - [ ] Tentativas diretas de ler/escrever recursos de outra empresa são negadas pelo banco (RLS), inclusive URLs/API requests manipulados.
 
+## Contrato de autorização
+
+| Recurso | UXDriven (membro interno) | Cliente A | Cliente B |
+| --- | --- | --- | --- |
+| Clientes e projetos | Organização autorizada | Apenas os seus; projeto somente se compartilhado | Apenas os seus; projeto somente se compartilhado |
+| Demandas | Todas da organização | Apenas as suas com `client_visible = true` | Apenas as suas com `client_visible = true` |
+| Notas internas | Acesso à organização | Nunca | Nunca |
+| Comentários | Acesso à organização | Apenas `shared` em demanda visível | Apenas `shared` em demanda visível |
+| Aprovação | Leitura; agência gerencia etapa | Inserir decisão somente em demanda visível na etapa `client` | Idem, apenas da própria empresa |
+| Gerenciar acesso | Via SQL administrativo por enquanto | Proibido | Proibido |
+
+### Suite automatizada de RLS
+
+O arquivo `supabase/tests/client_portal_rls_test.sql` cobre **22 regras** com duas contas fictícias, um proprietário e o papel anônimo. Ele verifica operações reais sob o papel `authenticated`, inclusive tentativas indevidas de aprovação, comentários e associação a outro cliente.
+
+Execute **somente em um Supabase local de testes** com as migrations aplicadas:
+
+```bash
+supabase test db
+```
+
+O script abre transação e termina com `ROLLBACK`, portanto os dados de teste não persistem. O teste ainda precisa ser executado em um ambiente PostgreSQL/Supabase habilitado; a CI atual valida somente a sintaxe do JavaScript e os testes da camada de UI.
+
+**Teste manual complementar no Preview:** com duas contas Auth de teste, vincule cada uma a um cliente diferente; confira que A não vê demandas de B e vice-versa. Um usuário deve continuar sem acesso mesmo conhecendo um UUID de outro cliente, porque a proteção é do PostgreSQL, não do seletor da interface.
+
 ## Implantação segura
 
 Este desenvolvimento pertence à **PR do Portal do Cliente** e ainda precisa de testes integrados com **duas contas distintas**. O código sozinho não comprova o isolamento RLS em um Supabase real.
