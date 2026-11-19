@@ -1,7 +1,7 @@
 name: Validate Social Studio
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feat/auth-live-supabase]
   push:
     branches: [main]
 permissions:
@@ -18,4 +18,7 @@ jobs:
         run: |
           node --check dist/app.js
           node --check dist/boot.js
+          node --check dist/client-portal.js
           node --check api/public-config.js
+      - name: Test client isolation at UI boundary
+        run: node --test tests/client-portal.test.cjs

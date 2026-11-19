@@ -65,11 +65,28 @@
       screen("ACESSO NÃO LIBERADO","Conta sem <em>workspace.</em>",message,btn("signout","Sair desta conta"));
       document.getElementById("signout").onclick=signOut;
     };
+    function openClientPortal(user,memberships) {
+      // No agency dashboard bundle or internal notes are loaded for a client account.
+      const css=document.createElement("link");
+      css.rel="stylesheet";
+      css.href="./client-portal.css";
+      document.head.appendChild(css);
+      const script=document.createElement("script");
+      script.src="./client-portal.js";
+      script.onload=()=>window.UXDrivenClientPortal({db,user,memberships,signOut});
+      script.onerror=()=>fail("Não foi possível carregar o Portal do Cliente.");
+      document.body.appendChild(script);
+    }
     async function openWorkspace(user) {
       const memberships=await db.from("organization_members").select("organization_id,role").eq("user_id",user.id);
       if(memberships.error)throw memberships.error;
       const member=memberships.data?.[0];
-      if(!member)return fail("Seu usuário ainda não está associado à organização UXDriven no banco de dados.");
+      if(!member){
+        const clientMemberships=await db.from("client_members").select("client_id,organization_id").eq("user_id",user.id);
+        if(clientMemberships.error)throw clientMemberships.error;
+        if(clientMemberships.data?.length)return openClientPortal(user,clientMemberships.data);
+        return fail("Seu usuário ainda não está associado à equipe UXDriven ou a um cliente autorizado.");
+      }
       const org=await db.from("organizations").select("id,name").eq("id",member.organization_id).single();
       if(org.error)throw org.error;
       const organization=org.data;
@@ -104,7 +121,7 @@
           return makeTask(r.data,input.internalNote);
         },
         async updateTask(input){
-          const r=await db.from("tasks").update({stage:input.stage,due_date:input.due,public_summary:input.publicSummary}).eq("id",input.id).eq("organization_id",organization.id);
+          const r=await db.from("tasks").update({stage:input.stage,due_date:input.due,public_summary:input.publicSummary,client_visible:input.clientVisible===true}).eq("id",input.id).eq("organization_id",organization.id);
           if(r.error)throw r.error;
           const n=await db.from("task_internal_notes").upsert({task_id:input.id,organization_id:organization.id,body:input.internalNote||""},{onConflict:"task_id"});
           if(n.error)throw new Error("Etapa atualizada; nota interna não salva: "+n.error.message);
