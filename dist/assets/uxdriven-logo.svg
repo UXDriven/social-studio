@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="UXDriven">
+  <path d="M17 19V53C17 73 30 85 50 85C70 85 83 73 83 53V19" stroke="#D7FF5F" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="50" cy="50" r="9" fill="#F0F3EA"/>
+  <path d="M50 17V32" stroke="#D7FF5F" stroke-width="7" stroke-linecap="round"/>
+</svg>

@@ -6,7 +6,7 @@
   const ICON = name => `<svg class="icon" aria-hidden="true"><use href="#i-${name}"></use></svg>`;
   const $ = (s, scope=document) => scope.querySelector(s);
   const escapeHTML = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const clients = [
+  const clients = window.UXDrivenLive?.enabled ? window.UXDrivenLive.clients : [
     {id:'aurora',name:'Aurora Pessoas',short:'AP',type:'Consultoria & RH',hex:'#6443b2',light:'#e5d7ff',slug:'aurora'},
     {id:'atlas',name:'Atlas Sports',short:'AS',type:'Esporte & Eventos',hex:'#2a673e',light:'#d1f3ad',slug:'atlas'},
     {id:'mednova',name:'MedNova',short:'MN',type:'Healthtech',hex:'#6041ad',light:'#ddd0ff',slug:'wb'},
@@ -68,13 +68,13 @@
   const state={
     view:(location.hash.slice(1) in views)?location.hash.slice(1):'overview',
     client:'all', week:0, month:0, period:'30d', calendarMode:'month', filter:'all',
-    posts:restored.length?restored:seed, tasks:restoredTasks??taskSeed, taskView:'board', portalClient:'aurora',
+    posts:window.UXDrivenLive?.enabled?[]:(restored.length?restored:seed), tasks:window.UXDrivenLive?.enabled?window.UXDrivenLive.tasks:(restoredTasks??taskSeed), taskView:'board', portalClient:'aurora',
     generated:null, generatedTopic:'', generatedPlatform:'Instagram', generatedTone:'Estratégico', generatedClient:'aurora'
   };
-  const persist=()=>localStorage.setItem('uxdriven-social-demo-v1',JSON.stringify(state.posts));
-  const persistTasks=()=>localStorage.setItem('uxdriven-demandas-demo-v1',JSON.stringify(state.tasks));
+  const persist=()=>{if(!window.UXDrivenLive?.enabled)localStorage.setItem('uxdriven-social-demo-v1',JSON.stringify(state.posts));};
+  const persistTasks=()=>{if(!window.UXDrivenLive?.enabled)localStorage.setItem('uxdriven-demandas-demo-v1',JSON.stringify(state.tasks));};
   const currentClient=()=>clients.find(c=>c.id===state.client);
-  const clientOf=id=>clients.find(c=>c.id===id)||clients[0];
+  const clientOf=id=>clients.find(c=>c.id===id)||clients[0]||{id:'none',name:'Cliente',short:'CL',slug:'ux',type:'Cliente',hex:'#416b32',light:'#ffffff'};
   const filtered=()=>state.posts.filter(p=>state.client==='all'||p.client===state.client);
   const visibleTasks=()=>state.tasks.filter(t=>state.client==='all'||t.client===state.client);
   const stageOf=id=>taskStages.find(s=>s.id===id)||taskStages[0];
@@ -135,6 +135,7 @@
     return `<article class="portal-demand-card"><div class="portal-demand-top"><span class="task-category">${escapeHTML(t.type)}</span><span class="portal-stage"><i style="background:${stage.dot}"></i>${stage.name}</span></div><h3>${escapeHTML(t.title)}</h3><p>${escapeHTML(t.publicSummary)}</p><div class="portal-demand-bottom"><span>${ICON('calendar')} Previsão: ${longDate(t.due)}</span><button class="link-button" data-task="${t.id}">Ver detalhes ${ICON('arrow-up-right')}</button></div></article>`;
   }
   function renderPortal(){
+    if(window.UXDrivenLive?.enabled&&!clients.length)return '<div class="notice">Cadastre um cliente antes de visualizar a prévia do portal.</div>';
     const c=clientOf(state.portalClient),ts=state.tasks.filter(t=>t.client===c.id);
     const approvals=ts.filter(t=>t.stage==='client'),active=ts.filter(t=>t.stage!=='done'),done=ts.filter(t=>t.stage==='done');
     const posts=state.posts.filter(p=>p.client===c.id && ['approved','scheduled','published'].includes(p.status)).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
@@ -189,7 +190,7 @@
     {id:'a6',client:'aurora',name:'Governança para crescer',format:'LinkedIn · Carrossel',title:'PESSOAS\n& FUTURO.',type:'aurora'}
   ];
   function renderLibrary(){
-    const items=creativeSamples.filter(a=>(state.client==='all'||a.client===state.client)&&(state.filter==='all'||a.client===state.filter));
+    const items=(window.UXDrivenLive?.enabled?[]:creativeSamples).filter(a=>(state.client==='all'||a.client===state.client)&&(state.filter==='all'||a.client===state.filter));
     return `${header('BRAND SYSTEMS / 04','Ideias com <em>identidade.</em>','Organize referências, campanhas e sistemas visuais por marca.',`${clientSelect()}<button class="btn btn-primary" data-view="studio">${ICON('plus')} Criar com IA</button>`)}
       <div class="notice">${ICON('image')}<div>Biblioteca conceitual com criativos ilustrativos. Uploads de arquivos, logos e brand kits reais serão conectados na etapa de backend.</div></div>
       <div class="filters-row"><div class="segmented"><button class="${state.filter==='all'?'active':''}" data-filter="all">Todos</button><button class="${state.filter==='aurora'?'active':''}" data-filter="aurora">Aurora Pessoas</button><button class="${state.filter==='atlas'?'active':''}" data-filter="atlas">Atlas Sports</button><button class="${state.filter==='ux'?'active':''}" data-filter="ux">UXDriven</button></div><span class="demo-note" style="margin:0">${items.length} REFERÊNCIAS VISUAIS</span></div>
@@ -226,7 +227,7 @@
     <div class="notice">${ICON('bot')}<div>Estes são papéis de agentes planejados para a arquitetura do produto. Nesta versão, cada card abre um briefing de demonstração no Studio; orquestração de agentes reais será uma implementação futura.</div></div><div class="agents-grid">${agents.map((a,i)=>`<article class="agent-card"><div class="agent-head"><div class="agent-icon">${ICON(a.ico)}</div><span class="status-chip">CONCEPT / 0${i+1}</span></div><h3>${a.name}</h3><div class="panel-kicker">${a.role.toUpperCase()}</div><p>${a.desc}</p><button class="btn btn-small" data-agent="${i}">Experimentar função ${ICON('arrow-up-right')}</button></article>`).join('')}</div>`;}
   function renderClients(){
     return `${header('MULTI-BRAND WORKSPACE / 08','Cada marca, <em>seu universo.</em>','A agência por inteiro, organizada com contexto individual por cliente.',`<button class="btn btn-primary" data-action="new-client">${ICON('plus')} Novo cliente</button>`)}
-      <div class="notice">${ICON('info')}<div>Clientes de referência usados apenas para validar a experiência. Branding configurável, pastas, permissões e onboarding serão persistidos no backend da aplicação.</div></div><div class="client-grid">${clients.map(c=>`<article class="client-card"><div class="client-logo" style="background:${c.hex};color:${c.light}">${c.short}</div><div class="panel-kicker">CLIENT WORKSPACE</div><h3>${c.name}</h3><p>${c.type}</p><div class="client-stats"><span>Demandas<strong>${state.tasks.filter(t=>t.client===c.id).length.toString().padStart(2,'0')}</strong></span><span>Conteúdos<strong>${state.posts.filter(p=>p.client===c.id).length.toString().padStart(2,'0')}</strong></span><span>Com cliente<strong>${state.tasks.filter(t=>t.client===c.id&&t.stage==='client').length.toString().padStart(2,'0')}</strong></span></div><div class="client-card-actions"><button class="btn btn-small" data-client-open="${c.id}">Gerenciar ${ICON('arrow-up-right')}</button><button class="btn btn-small" data-portal="${c.id}">Ver portal ${ICON('external')}</button></div></article>`).join('')}</div>`;
+      <div class="notice">${ICON('info')}<div>Clientes de referência usados apenas para validar a experiência. Branding configurável, pastas, permissões e onboarding serão persistidos no backend da aplicação.</div></div><div class="client-grid">${!clients.length?'<div class="notice">Nenhum cliente cadastrado ainda. Clique em Novo cliente para começar.</div>':''}${clients.map(c=>`<article class="client-card"><div class="client-logo" style="background:${c.hex};color:${c.light}">${c.short}</div><div class="panel-kicker">CLIENT WORKSPACE</div><h3>${c.name}</h3><p>${c.type}</p><div class="client-stats"><span>Demandas<strong>${state.tasks.filter(t=>t.client===c.id).length.toString().padStart(2,'0')}</strong></span><span>Conteúdos<strong>${state.posts.filter(p=>p.client===c.id).length.toString().padStart(2,'0')}</strong></span><span>Com cliente<strong>${state.tasks.filter(t=>t.client===c.id&&t.stage==='client').length.toString().padStart(2,'0')}</strong></span></div><div class="client-card-actions"><button class="btn btn-small" data-client-open="${c.id}">Gerenciar ${ICON('arrow-up-right')}</button><button class="btn btn-small" data-portal="${c.id}">Ver portal ${ICON('external')}</button></div></article>`).join('')}</div>`;
   }
   function renderIntegrations(){
     const integrations=[['Instagram','instagram','Planejamento e publicação via conta profissional e APIs autorizadas.'],['Facebook','facebook','Páginas, mídia e insights por permissões de publicação.'],['LinkedIn','linkedin','Publicações e relatórios conforme permissões de organização.']];
@@ -244,7 +245,7 @@
     const count=state.posts.filter(p=>['pending','review'].includes(p.status)).length;$('#approval-counter').textContent=count;
     $('#task-counter').textContent=state.tasks.filter(t=>t.stage!=='done').length;
     const selector=$('#client-select');if(selector)selector.value=state.client;
-    const portalSelect=$('#portal-client-select');if(portalSelect)portalSelect.value=state.portalClient;
+    const portalSelect=$('#portal-client-select');if(portalSelect){if(window.UXDrivenLive?.enabled&&clients.length&&!clients.some(c=>c.id===state.portalClient))state.portalClient=clients[0].id;portalSelect.value=state.portalClient;}
     const aiClient=$('#ai-client');if(aiClient)aiClient.value=state.generatedClient;
     const aiPlat=$('#ai-platform');if(aiPlat)aiPlat.value=state.generatedPlatform;
     const aiTone=$('#ai-tone');if(aiTone)aiTone.value=state.generatedTone;
@@ -254,7 +255,8 @@
   function toast(message){const n=document.createElement('div');n.className='toast';n.textContent=message;$('#toast-root').appendChild(n);setTimeout(()=>n.remove(),3400);}
   function modal(title,sub,body,wide=false){$('#modal-root').innerHTML=`<div class="modal-backdrop" data-action="close-backdrop"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-label="${escapeHTML(title)}"><div class="modal-top"><div><h2>${title}</h2><div class="modal-sub">${sub||''}</div></div><button class="modal-close" data-action="close-modal" aria-label="Fechar">${ICON('x')}</button></div>${body}</section></div>`;const first=$('.modal input,.modal textarea');if(first)first.focus();}
   function closeModal(){$('#modal-root').innerHTML='';}
-  function newPostModal(date=today,client=state.client==='all'?'aurora':state.client){
+  function newPostModal(date=today,client=state.client==='all'?(clients[0]?.id||''):state.client){
+    if(!clients.length){toast('Cadastre um cliente primeiro.');go('clients');return;}
     const d=date+'T10:00';
     modal('Novo conteúdo','Adicione uma pauta ao calendário editorial da sua agência.',`<form id="new-post-form">
       <div class="field"><label for="new-title">Título / ideia</label><input id="new-title" class="input" name="title" placeholder="Ex.: O que aprendemos neste trimestre?" required maxlength="130"></div>
@@ -276,7 +278,17 @@
     modal('Agendar publicação',escapeHTML(p.title),`<form id="schedule-post-form" data-id="${p.id}"><div class="field"><label for="schedule-date">Data e hora planejadas</label><input class="input" type="datetime-local" id="schedule-date" name="date" value="${p.date}" required></div><div class="notice">${ICON('info')}<div>Este agendamento é apenas visual e fica salvo no navegador. Uma versão de produção exigirá uma conexão autorizada e uma fila de publicação no servidor.</div></div><div class="modal-actions"><button type="button" class="btn" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">Confirmar agendamento (demo)</button></div></form>`);
   }
   function editPostModal(id){const p=state.posts.find(x=>x.id===id);if(!p)return;modal('Atualizar publicação',escapeHTML(p.title),`<form id="edit-post-form" data-id="${p.id}"><div class="form-row"><div class="field"><label for="edit-status">Status</label><div class="select-wrap"><select id="edit-status" name="status">${Object.entries(status).map(([id,s])=>`<option value="${id}" ${id===p.status?'selected':''}>${s.label}</option>`).join('')}</select></div></div><div class="field"><label for="edit-date">Data planejada</label><input class="input" id="edit-date" name="date" type="datetime-local" value="${p.date}" required></div></div><div class="notice">${ICON('info')}<div>Alterar para “Agendado” atualiza apenas este protótipo. Nenhuma publicação será enviada a plataformas reais.</div></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">Salvar alterações</button></div></form>`);}
+  function newClientModal(){
+    modal('Novo cliente','Cadastre uma empresa no workspace UXDriven.',`<form id="new-client-form">
+      <div class="field"><label for="client-name">Nome do cliente</label>
+      <input class="input" name="name" id="client-name" required minlength="2" maxlength="160" placeholder="Ex.: Cliente piloto"></div>
+      <div class="field"><label for="client-category">Categoria / segmento</label>
+      <input class="input" name="category" id="client-category" maxlength="100" placeholder="Ex.: Tecnologia"></div>
+      <div class="modal-actions"><button type="button" class="btn" data-action="close-modal">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Cadastrar cliente</button></div></form>`);
+  }
   function newTaskModal(stage='backlog'){
+    if(!clients.length){toast('Cadastre o primeiro cliente antes de criar demandas.');go('clients');return;}
     modal('Nova demanda','Crie um item de trabalho para a operação da UXDriven.',`<form id="new-task-form">
       <div class="field"><label for="task-title">Nome da demanda</label><input class="input" id="task-title" name="title" maxlength="130" placeholder="Ex.: Criar landing page de campanha" required></div>
       <div class="form-row"><div class="field"><label for="task-client">Cliente</label><div class="select-wrap"><select id="task-client" name="client">${clientOptions(false)}</select></div></div><div class="field"><label for="task-type">Tipo de trabalho</label><div class="select-wrap"><select id="task-type" name="type"><option>Social media</option><option>Design visual</option><option>Landing page</option><option>Site institucional</option><option>Campanha</option><option>Produto digital</option><option>Estratégia</option><option>Relatório</option></select></div></div></div>
@@ -285,13 +297,13 @@
       <div class="field"><label for="task-summary">Atualização visível ao cliente</label><textarea class="textarea" id="task-summary" name="publicSummary" placeholder="Resumo objetivo e sem informações internas..." required style="min-height:80px"></textarea></div>
       <div class="field"><label for="task-internal">Notas internas (não aparecem no portal)</label><textarea class="textarea" id="task-internal" name="internalNote" placeholder="Instruções internas da UXDriven..." style="min-height:75px"></textarea></div>
       <div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">${ICON('plus')} Criar demanda</button></div></form>`,true);
-    $('#task-client').value=state.client==='all'?'aurora':state.client;
+    $('#task-client').value=state.client==='all'?clients[0].id:state.client;
     $('#task-stage').value=stage;
   }
   function taskModal(id,clientMode=false){
     const t=state.tasks.find(x=>x.id===id);if(!t)return;
     const stage=stageOf(t.stage);
-    const comments=(t.comments||[]).map(c=>`<div class="task-comment"><strong>${escapeHTML(c.author||'Cliente')}</strong><span>${escapeHTML(c.text)}</span></div>`).join('');
+    const comments=(t.comments||[]).filter(c=>!clientMode||c.visibility==='shared').map(c=>`<div class="task-comment"><strong>${escapeHTML(c.author||'Cliente')}</strong><span>${escapeHTML(c.text)}</span></div>`).join('');
     const information=`<div class="post-detail-card"><div class="panel-kicker">${clientOf(t.client).name.toUpperCase()} / ${escapeHTML(t.type).toUpperCase()}</div><h3>${escapeHTML(t.title)}</h3><p>${escapeHTML(t.publicSummary)}</p></div><div class="detail-grid"><div class="detail-kpi"><span>ETAPA ATUAL</span><strong style="font-size:15px;color:${stage.dot}">${stage.name}</strong></div><div class="detail-kpi"><span>PREVISÃO DE ENTREGA</span><strong style="font-size:16px">${longDate(t.due)}</strong></div></div>`;
     if(clientMode){
       modal('Acompanhar demanda',`Portal de ${clientOf(t.client).name} · demonstração`,`${information}<div class="section-topline">CONVERSA SOBRE ESTA ENTREGA</div>${comments||'<p class="portal-muted">Nenhum comentário até agora.</p>'}<form id="client-comment-form" data-id="${t.id}"><div class="field"><label for="client-comment">Adicionar comentário</label><textarea class="textarea" id="client-comment" name="comment" placeholder="Escreva uma dúvida ou observação para a equipe..." style="min-height:74px" required></textarea></div><div class="modal-actions"><button class="btn btn-small" type="submit">${ICON('message')} Enviar comentário (demo)</button></div></form>${t.stage==='client'?`<div class="divider"></div><div class="modal-actions"><button class="btn" data-client-revise="${t.id}">Solicitar ajustes</button><button class="btn btn-primary" data-client-approve="${t.id}">Aprovar entrega ${ICON('check-circle')}</button></div>`:''}`,true);
@@ -318,8 +330,8 @@
     const openClient=e.target.closest('[data-client-open]');if(openClient){state.client=openClient.dataset.clientOpen;go('tasks');return;}
     const viewMode=e.target.closest('[data-task-view]');if(viewMode){state.taskView=viewMode.dataset.taskView;render();return;}
     const task=e.target.closest('[data-task]');if(task){taskModal(task.dataset.task,state.view==='portal');return;}
-    const clientApprove=e.target.closest('[data-client-approve]');if(clientApprove){const t=state.tasks.find(x=>x.id===clientApprove.dataset.clientApprove);if(t&&t.stage==='client'){t.stage='done';t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:'Entrega aprovada.'}]);persistTasks();closeModal();render();toast('Entrega aprovada na simulação.');}return;}
-    const clientRevise=e.target.closest('[data-client-revise]');if(clientRevise){clientRevisionModal(clientRevise.dataset.clientRevise);return;}
+    const clientApprove=e.target.closest('[data-client-approve]');if(clientApprove&&window.UXDrivenLive?.enabled){toast('Aprovação do cliente será ativada em uma próxima etapa.');return;}if(clientApprove){const t=state.tasks.find(x=>x.id===clientApprove.dataset.clientApprove);if(t&&t.stage==='client'){t.stage='done';t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:'Entrega aprovada.'}]);persistTasks();closeModal();render();toast('Entrega aprovada na simulação.');}return;}
+    const clientRevise=e.target.closest('[data-client-revise]');if(clientRevise&&window.UXDrivenLive?.enabled){toast('Solicitação de ajustes disponível quando liberarmos o portal de clientes.');return;}if(clientRevise){clientRevisionModal(clientRevise.dataset.clientRevise);return;}
     const post=e.target.closest('[data-post]');if(post){state.view==='portal'?publicPostModal(post.dataset.post):postModal(post.dataset.post);return;}
     const creative=e.target.closest('[data-creative]');if(creative){creativeModal(creative.dataset.creative);return;}
     const filter=e.target.closest('[data-filter]');if(filter){state.filter=filter.dataset.filter;render();return;}
@@ -348,6 +360,7 @@
     if(a==='creative-to-studio'){const c=creativeSamples.find(x=>x.id===action.dataset.id);if(c){state.generatedClient=c.client;state.generatedTopic='Novo conteúdo inspirado em '+c.name;closeModal();go('studio');}}
     if(a==='integration-info')integrationModal(action.dataset.platform);
     if(a==='integration-architecture')modal('Arquitetura das integrações','Estratégia planejada para o MVP conectado',`<div class="approval-steps"><div class="approval-step"><div class="step-number">01</div>Apps OAuth registrados na Meta e LinkedIn</div><div class="approval-step"><div class="step-number">02</div>Tokens por conta e cliente, criptografados</div><div class="approval-step"><div class="step-number">03</div>Fila de jobs com repetição segura e status</div><div class="approval-step"><div class="step-number">04</div>Webhooks, logs e relatórios normalizados</div></div><div class="modal-actions"><button class="btn btn-primary" data-action="close-modal">Fechar</button></div>`);
+    if(a==='new-client'&&window.UXDrivenLive?.enabled){newClientModal();return;}
     if(a==='new-client')modal('Cadastro de clientes','Disponível na fase de backend',`<div class="notice">${ICON('info')}<div>Para uma operação real, cada cliente terá identidade visual, permissões, canais, equipe, conteúdos e histórico isolados. O cadastro e o upload de brand kits entrarão no próximo ciclo.</div></div><div class="modal-actions"><button class="btn btn-primary" data-action="close-modal">Entendi</button></div>`);
   });
   document.addEventListener('change',e=>{
@@ -357,10 +370,11 @@
   });
   document.addEventListener('input',e=>{if(e.target.id==='ai-topic')state.generatedTopic=e.target.value;});
   document.addEventListener('submit',e=>{
-    if(e.target.id==='new-task-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(!data.title?.trim()||!data.publicSummary?.trim())return;const t={id:'t'+Date.now(),client:data.client,title:data.title.trim(),type:data.type,stage:data.stage,priority:data.priority,assignee:data.assignee,due:data.due,publicSummary:data.publicSummary.trim(),internalNote:data.internalNote||'',comments:[]};state.tasks.push(t);persistTasks();closeModal();render();toast('Demanda criada no Kanban (demo).');}
-    if(e.target.id==='edit-task-form'){e.preventDefault();const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));t.stage=data.stage;t.due=data.due;t.publicSummary=data.publicSummary;t.internalNote=data.internalNote;persistTasks();closeModal();render();toast('Demanda atualizada (demo).');}
-    if(e.target.id==='client-comment-form'){e.preventDefault();const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));if(!data.comment?.trim())return;t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:data.comment.trim()}]);persistTasks();closeModal();render();toast('Comentário registrado na simulação.');}
-    if(e.target.id==='client-revision-form'){e.preventDefault();const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t||t.stage!=='client')return;const data=Object.fromEntries(new FormData(e.target));if(!data.comment?.trim())return;t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:'Ajustes solicitados: '+data.comment.trim()}]);t.stage='progress';persistTasks();closeModal();render();toast('Solicitação de ajustes registrada (demo).');}
+    if(e.target.id==='new-client-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const name=String(data.name||'').trim();if(name.length<2)return;window.UXDrivenLive.createClient({name,category:String(data.category||'').trim()}).then(client=>{clients.push(client);state.client=client.id;state.portalClient=client.id;closeModal();render();toast('Cliente salvo no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}
+    if(e.target.id==='new-task-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(!data.title?.trim()||!data.publicSummary?.trim())return;const t={id:'t'+Date.now(),client:data.client,title:data.title.trim(),type:data.type,stage:data.stage,priority:data.priority,assignee:data.assignee,due:data.due,publicSummary:data.publicSummary.trim(),internalNote:data.internalNote||'',comments:[]};if(window.UXDrivenLive?.enabled){window.UXDrivenLive.createTask(t).then(saved=>{state.tasks.push(saved);closeModal();render();toast('Demanda salva no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}state.tasks.push(t);persistTasks();closeModal();render();toast('Demanda criada no Kanban (demo).');}
+    if(e.target.id==='edit-task-form'){e.preventDefault();const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));if(window.UXDrivenLive?.enabled){window.UXDrivenLive.updateTask({id:t.id,stage:data.stage,due:data.due,publicSummary:data.publicSummary,internalNote:data.internalNote}).then(()=>{t.stage=data.stage;t.due=data.due;t.publicSummary=data.publicSummary;t.internalNote=data.internalNote;closeModal();render();toast('Demanda atualizada no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}t.stage=data.stage;t.due=data.due;t.publicSummary=data.publicSummary;t.internalNote=data.internalNote;persistTasks();closeModal();render();toast('Demanda atualizada (demo).');}
+    if(e.target.id==='client-comment-form'){e.preventDefault();if(window.UXDrivenLive?.enabled){toast('Comentários do portal ainda não foram ativados.');return;}const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));if(!data.comment?.trim())return;t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:data.comment.trim()}]);persistTasks();closeModal();render();toast('Comentário registrado na simulação.');}
+    if(e.target.id==='client-revision-form'){e.preventDefault();if(window.UXDrivenLive?.enabled){toast('Aprovação do cliente ainda não foi ativada.');return;}const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t||t.stage!=='client')return;const data=Object.fromEntries(new FormData(e.target));if(!data.comment?.trim())return;t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:'Ajustes solicitados: '+data.comment.trim()}]);t.stage='progress';persistTasks();closeModal();render();toast('Solicitação de ajustes registrada (demo).');}
     if(e.target.id==='new-post-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const p={id:'p'+Date.now(),client:data.client,title:data.title.trim(),platform:data.platform,format:data.format,date:data.date,status:'draft',description:data.description||''};if(!p.title||!p.date)return;state.posts.push(p);persist();closeModal();render();toast('Conteúdo salvo no planejamento (demo).');}
     if(e.target.id==='edit-post-form'){e.preventDefault();const p=state.posts.find(x=>x.id===e.target.dataset.id);if(!p)return;const data=Object.fromEntries(new FormData(e.target));p.status=data.status;p.date=data.date;persist();closeModal();render();toast('Publicação atualizada (demo).');}
     if(e.target.id==='schedule-post-form'){e.preventDefault();const p=state.posts.find(x=>x.id===e.target.dataset.id);if(!p)return;const data=Object.fromEntries(new FormData(e.target));p.date=data.date;p.status='scheduled';persist();closeModal();render();toast('Agendamento demonstrativo confirmado. Sem postagem real.');}
@@ -375,7 +389,7 @@
   document.addEventListener('dragstart',e=>{const c=e.target.closest('[data-task-drag]');if(c){draggingTask=c.dataset.taskDrag;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggingTask);c.classList.add('dragging');}});
   document.addEventListener('dragover',e=>{const zone=e.target.closest('[data-drop-stage]');if(zone&&draggingTask){e.preventDefault();e.dataTransfer.dropEffect='move';zone.classList.add('drop-target');}});
   document.addEventListener('dragleave',e=>{const zone=e.target.closest('[data-drop-stage]');if(zone&&!zone.contains(e.relatedTarget))zone.classList.remove('drop-target');});
-  document.addEventListener('drop',e=>{const zone=e.target.closest('[data-drop-stage]');if(!zone||!draggingTask)return;e.preventDefault();const t=state.tasks.find(x=>x.id===draggingTask);if(t){t.stage=zone.dataset.dropStage;persistTasks();render();toast('Etapa da demanda atualizada (demo).');}draggingTask=null;});
+  document.addEventListener('drop',e=>{const zone=e.target.closest('[data-drop-stage]');if(!zone||!draggingTask)return;e.preventDefault();const t=state.tasks.find(x=>x.id===draggingTask);if(t){const next=zone.dataset.dropStage;if(window.UXDrivenLive?.enabled){window.UXDrivenLive.moveTask(t.id,next).then(()=>{t.stage=next;render();toast('Etapa salva no Supabase.');}).catch(err=>{render();toast('Erro: '+err.message);});}else{t.stage=next;persistTasks();render();toast('Etapa da demanda atualizada (demo).');}}draggingTask=null;});
   document.addEventListener('dragend',()=>{draggingTask=null;document.querySelectorAll('.dragging,.drop-target').forEach(el=>el.classList.remove('dragging','drop-target'));});
   function searchModal(){modal('Buscar no Social Studio','Encontre uma publicação pelo título ou cliente.',`<div class="field"><label for="search-input">Buscar conteúdo</label><input class="input" id="search-input" placeholder="Digite um nome, tema ou cliente..." autocomplete="off"></div><div id="search-results" class="panel" style="margin-top:15px"></div>`,true);function update(){const val=$('#search-input').value.toLowerCase().trim();const found=state.posts.filter(p=>p.title.toLowerCase().includes(val)||clientOf(p.client).name.toLowerCase().includes(val)).slice(0,8);$('#search-results').innerHTML=renderList(found);}$('#search-input').addEventListener('input',update);update();}
   $('#search-btn').addEventListener('click',searchModal);
