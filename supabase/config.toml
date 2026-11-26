@@ -1,0 +1,4 @@
+project_id = "uxdriven-social-studio-rls-ci"
+
+[db]
+major_version = 17
