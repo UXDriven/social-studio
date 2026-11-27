@@ -117,6 +117,19 @@
       const live={
         enabled:true,user,role:member.role,organization,
         clients:(c.data||[]).map(makeClient),tasks,signOut,
+        async askAssistant({message,clientId}){
+          const session=await db.auth.getSession();
+          const accessToken=session.data?.session?.access_token;
+          if(!accessToken)throw new Error("Sua sessão expirou. Entre novamente no Social Studio.");
+          const res=await fetch("/api/assistant",{
+            method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+accessToken},
+            body:JSON.stringify({message,clientId:clientId||null})
+          });
+          const result=await res.json().catch(()=>({}));
+          if(!res.ok)throw new Error(result.reply||"Não foi possível consultar o assistente ("+res.status+").");
+          return result;
+        },
+
         async refreshWorkspace(){
           const [t,n,cm,ap]=await Promise.all([
             db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at,created_at").eq("organization_id",organization.id),
