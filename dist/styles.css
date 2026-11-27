@@ -612,3 +612,21 @@ body.locked .app-shell{display:none}
 .copilot-safe-note p{font-size:11px;line-height:1.8;color:#92a58e;margin:9px 0 18px}
 @media(max-width:990px){.copilot-layout{grid-template-columns:1fr}.copilot-chat{min-height:500px}.copilot-side{max-width:none}}
 @media(max-width:540px){.copilot-message{max-width:100%;padding:14px}.copilot-messages{height:290px}.copilot-form-bottom{align-items:start;flex-direction:column}.copilot-form-bottom small{max-width:100%}}
+
+
+/* In-development AI surfaces: clear status, no interactive generation */
+.nav-pill-future{font-size:8px!important;letter-spacing:.045em;white-space:nowrap;opacity:.84}
+.ai-future-panel{position:relative;min-height:490px;overflow:hidden;background:radial-gradient(ellipse at 80% 30%,#1f3420 0,#0e170f 60%,#101811 100%);border:1px solid #2f4730;border-radius:18px;margin-top:22px;display:flex;align-items:center}
+.ai-future-glow{position:absolute;right:-105px;top:-120px;width:560px;height:560px;border:1px solid rgba(195,244,98,.16);border-radius:50%;pointer-events:none}
+.ai-future-glow:after{content:"";position:absolute;inset:66px;border:1px dashed rgba(195,244,98,.13);border-radius:50%}
+.ai-future-content{position:relative;z-index:1;max-width:650px;padding:54px 56px}
+.ai-future-eyebrow{display:flex;align-items:center;gap:10px;font:10px var(--mono);letter-spacing:.1em;color:#c3deaf;margin-bottom:24px}
+.ai-future-status{display:inline-block;border:1px solid rgba(195,244,98,.5);background:#25381e;color:#d4ff76;border-radius:7px;padding:9px 12px;font:700 10px var(--mono);letter-spacing:.08em}
+.ai-future-content h2{font:700 clamp(36px,5.2vw,67px)/1.08 var(--display);letter-spacing:-.055em;margin:25px 0 18px;color:#f2f8ec}
+.ai-future-content h2 em{font-style:normal;color:#d5ff65}
+.ai-future-content p{max-width:540px;color:#a6b9a1;font:13px/1.9 var(--body);margin:0 0 26px}
+.ai-future-features{display:flex;flex-wrap:wrap;gap:9px}
+.ai-future-features span{border:1px solid #3a4936;border-radius:50px;color:#bacfb0;background:#19251a;padding:9px 12px;font:10px var(--body)}
+.ai-future-links{display:flex;flex-wrap:wrap;gap:12px;margin:28px 0 22px}
+.ai-future-content>small{font:10px var(--mono);letter-spacing:.07em;color:#8fa483}
+@media(max-width:700px){.ai-future-panel{min-height:440px}.ai-future-content{padding:35px 25px}.ai-future-content h2{font-size:40px}.ai-future-glow{right:-300px;opacity:.6}}
