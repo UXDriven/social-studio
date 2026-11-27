@@ -490,6 +490,13 @@ body.locked .app-shell{display:none}
 .auth-alert{background:rgba(250,153,125,.07);border:1px solid rgba(250,153,125,.33);border-radius:10px;color:#ffd4bf;padding:17px 19px;font:11px/1.7 'DM Mono',monospace;margin:16px 0}
 .auth-alert strong,.auth-alert span{display:block}
 .auth-alert strong{font-weight:500;margin-bottom:7px;color:#f9e6d9}
+.auth-forgot-row{display:flex;justify-content:flex-end;margin:-9px 0 4px}
+.auth-support-actions{display:flex;margin-top:20px}
+.auth-text-action{appearance:none;border:0;background:transparent;padding:6px 0;color:#d7ff5f;font:600 12px Manrope,sans-serif;cursor:pointer;text-decoration:underline;text-decoration-color:rgba(215,255,95,.35);text-underline-offset:4px}
+.auth-text-action:hover,.auth-text-action:focus-visible{color:#edffbb;text-decoration-color:currentColor}
+.auth-text-action:focus-visible{outline:2px solid #d7ff5f;outline-offset:5px;border-radius:3px}
+.auth-success{padding:18px 20px;border:1px solid rgba(215,255,95,.34);border-radius:12px;background:rgba(215,255,95,.07);font:12px/1.85 Manrope,sans-serif;color:#dcefbf}
+.auth-alert[hidden]{display:none}
 .auth-helper{font:12px/1.8 Manrope,sans-serif;color:#abb8ad;margin:16px 0}
 .auth-helper strong{color:#f0f3ea}
 .auth-footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;font:500 9px 'DM Mono',monospace;color:#88968a;letter-spacing:.05em}
