@@ -31,6 +31,10 @@
     }
     function taskLabel(task) {
       const decision = latestDecision(task);
+      if (decision && task.stage === 'internal' && decision.decision === 'changes_requested')
+        return 'Ajustes solicitados · Em revisão';
+      if (decision && task.stage === 'done' && decision.decision === 'approved')
+        return 'Aprovado por você';
       if (task.stage === 'client' && decision && !pending(task))
         return decision.decision === 'approved' ? 'Aprovado por você' : 'Ajustes solicitados';
       return stages[task.stage] || 'Em andamento';
