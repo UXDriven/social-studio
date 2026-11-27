@@ -60,7 +60,7 @@
     const db=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}});
     const signOut=async()=>{await db.auth.signOut();location.reload();};
     const makeClient=(c,i)=>({id:c.id,name:c.name,type:c.category||"Cliente",short:c.name.split(/\s+/).slice(0,2).map(t=>t[0]).join("").toUpperCase(),hex:["#573999","#307446","#bc8731","#385b82"][i%4],light:"#f6ffe9",slug:"ux"});
-    const makeTask=(t,note="")=>({id:t.id,client:t.client_id,title:t.title,type:t.task_type,stage:t.stage,priority:t.priority,assignee:"Equipe UXDriven",due:t.due_date||new Date().toISOString().slice(0,10),publicSummary:t.public_summary||"",internalNote:note,clientVisible:t.client_visible,updatedAt:t.updated_at||"",comments:[],approvals:[]});
+    const makeTask=(t,note="")=>({id:t.id,client:t.client_id,title:t.title,type:t.task_type,stage:t.stage,priority:t.priority,assignee:"Equipe UXDriven",due:t.due_date||new Date().toISOString().slice(0,10),publicSummary:t.public_summary||"",internalNote:note,clientVisible:t.client_visible,updatedAt:t.updated_at||"",createdAt:t.created_at||"",comments:[],approvals:[]});
     const hydrateTasks=(rows,notes,comments,decisions,userId)=>{
       const notesById=new Map((notes||[]).map(n=>[n.task_id,n.body]));
       const tasks=(rows||[]).map(t=>makeTask(t,notesById.get(t.id)||""));
@@ -107,7 +107,7 @@
       const organization=org.data;
       const [c,t,n,cm,ap]=await Promise.all([
         db.from("clients").select("id,name,category,is_active").eq("organization_id",organization.id).order("name"),
-        db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at").eq("organization_id",organization.id),
+        db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at,created_at").eq("organization_id",organization.id),
         db.from("task_internal_notes").select("task_id,body").eq("organization_id",organization.id),
         db.from("task_comments").select("task_id,body,visibility,author_id,created_at").eq("organization_id",organization.id),
         db.from("task_approvals").select("id,task_id,decision,message,actor_id,created_at").eq("organization_id",organization.id)
@@ -119,7 +119,7 @@
         clients:(c.data||[]).map(makeClient),tasks,signOut,
         async refreshWorkspace(){
           const [t,n,cm,ap]=await Promise.all([
-            db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at").eq("organization_id",organization.id),
+            db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at,created_at").eq("organization_id",organization.id),
             db.from("task_internal_notes").select("task_id,body").eq("organization_id",organization.id),
             db.from("task_comments").select("task_id,body,visibility,author_id,created_at").eq("organization_id",organization.id),
             db.from("task_approvals").select("id,task_id,decision,message,actor_id,created_at").eq("organization_id",organization.id)
