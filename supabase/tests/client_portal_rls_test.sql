@@ -60,7 +60,7 @@ select results_eq(
   $$select id from public.task_comments where id::text like '66000000-%' order by id$$,
   array['66000000-0000-4000-8000-000000000001'::uuid], 'A sees only shared comments A');
 select is_empty(
-  $select id from public.task_approvals where id::text like '77000000-%' order by id$,
+  $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
   'A sees no other client approvals');
 select is_empty(
   $$update public.tasks set title='Unexpected update' where id='44000000-0000-4000-8000-000000000002'::uuid returning id$$,
@@ -81,7 +81,7 @@ select results_eq(
     values ('77000000-0000-4000-8000-000000000003','44000000-0000-4000-8000-000000000002','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000001','approved') returning id$$,
   array['77000000-0000-4000-8000-000000000003'::uuid], 'A can approve own shared task');
 select results_eq(
-  $select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000002'::uuid$,
+  $$select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000002'::uuid$$,
   array['done'::text], 'An approval moves its task to Done automatically');
 select throws_ok(
   $$insert into public.task_approvals(task_id,organization_id,client_id,actor_id,decision)
@@ -111,19 +111,19 @@ select results_eq(
   $$select id from public.task_comments where id::text like '66000000-%' order by id$$,
   array['66000000-0000-4000-8000-000000000003'::uuid], 'B sees only shared comments B');
 select is_empty(
-  $select id from public.task_approvals where id::text like '77000000-%' order by id$,
+  $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
   'B cannot read approvals issued by A');
 select results_eq(
-  $insert into public.task_approvals(id,task_id,organization_id,client_id,actor_id,decision,message)
-    values ('77000000-0000-4000-8000-000000000004','44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000002','changes_requested','Please revise copy') returning id$,
+  $$insert into public.task_approvals(id,task_id,organization_id,client_id,actor_id,decision,message)
+    values ('77000000-0000-4000-8000-000000000004','44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000002','changes_requested','Please revise copy') returning id$$,
   array['77000000-0000-4000-8000-000000000004'::uuid], 'B can request changes on own visible task');
 select results_eq(
-  $select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000003'::uuid$,
+  $$select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000003'::uuid$$,
   array['internal'::text], 'A revision moves its task to Internal review automatically');
 -- After both clients submit decisions, A can see only A records.
 set local request.jwt.claim.sub = '11000000-0000-4000-8000-000000000001';
 select results_eq(
-  $select id from public.task_approvals where id::text like '77000000-%' order by id$,
+  $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
   array['77000000-0000-4000-8000-000000000003'::uuid], 'A cannot read B client revision');
 
 
