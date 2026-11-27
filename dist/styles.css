@@ -553,3 +553,30 @@ body.locked .app-shell{display:none}
 .live-day-task span:nth-child(2){min-width:0;flex:1}.live-day-task strong{display:block;font-size:12px}.live-day-task small{display:block;color:#a6b8a1;margin-top:6px;font-size:10px}
 @media(max-width:850px){.live-calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.live-calendar-scroll .month-cell{min-height:115px;padding:9px}.live-calendar-scroll .month-entry{font-size:9px;padding:5px 7px;height:auto;border-radius:5px}.live-calendar-scroll .month-day-header{font-size:9px;padding:13px 10px}.live-calendar-week .day-post{font-size:9px}.live-calendar-stat{padding:15px 14px}}
 @media(max-width:540px){.live-calendar-summary{gap:8px}.live-calendar-stat span{font-size:8px}.live-calendar-stat strong{font-size:24px}.live-deadline-row{grid-template-columns:16px minmax(0,1fr) auto;gap:10px}.live-deadline-row .live-stage-chip{display:none}.live-deadline-row time{display:block;font-size:10px}.live-legend{gap:9px;font-size:10px}.live-demand-week .day-post{font-size:0;justify-content:center}.live-day-task{padding:12px}}
+
+
+/* Real operational analytics, no invented engagement metrics */
+.live-report-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}
+.live-report-stat{border:1px solid #2d3c2c;border-radius:13px;background:#141d15;padding:20px;display:flex;flex-direction:column;gap:11px}
+.live-report-stat>span{color:#a6b5a2;font:10px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.live-report-stat>strong{color:#edf7e8;font:700 34px var(--display)}
+.live-report-stat>small{font:9px var(--mono);color:#acc78b}
+.live-report-chart{height:225px;display:flex;align-items:end;gap:12px;border-bottom:1px solid #344733;padding:20px 8px 0}
+.live-report-bar{height:100%;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:end;gap:7px;min-width:0}
+.live-report-barfill{width:70%;min-height:3px;max-width:38px;background:linear-gradient(180deg,#d5ff69,#6aa74e);border-radius:6px 6px 0 0}
+.live-report-value{font:11px var(--mono);color:#e1eddb}
+.live-report-bar small{font:9px var(--mono);color:#9fb398;margin-bottom:-26px;white-space:nowrap}
+.live-report-chart+.demo-note{margin-top:43px}
+.live-report-stages{display:grid;gap:11px}
+.live-report-stage{display:flex;gap:12px;align-items:center;font:12px var(--body);color:#cdd8c9}
+.live-report-stage span:nth-child(2){flex:1}
+.live-report-stage strong{font-size:14px;color:#eef8e9}
+.live-report-decision{border-top:1px solid #30402e;margin-top:22px;padding-top:18px;display:grid;grid-template-columns:1fr auto;gap:12px;font:11px var(--body);color:#b3c5ae}
+.live-report-decision strong{color:#d7ff5f;font-size:17px}
+.live-report-client{border-top:1px solid #2c382b;display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 0}
+.live-report-client>div:first-child{flex:1}
+.live-report-client strong{font-size:13px;color:#edf5e8;display:block}
+.live-report-client small{font-size:10px;color:#9aaf97;margin-top:7px;display:block}
+.live-report-client>div:last-child{display:flex;gap:14px;align-items:center;color:#f8c594;font:10px var(--mono)}
+@media(max-width:830px){.live-report-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.live-report-stat{padding:15px}.live-report-chart{gap:6px}.live-report-client>div:last-child{flex-direction:column;align-items:end;gap:7px}}
+@media(max-width:480px){.live-report-stat>strong{font-size:28px}.live-report-client{align-items:start}.live-report-client>div:last-child{align-items:end}.live-report-client strong{font-size:11px}}
