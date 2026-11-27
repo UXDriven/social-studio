@@ -21,7 +21,7 @@
     draft:{label:'Rascunho',cls:'draft',class:'draft',tone:'gray'},
     published:{label:'Publicado',cls:'published',class:'published',tone:'green'}
   };
-  const views = {overview:'VISÃO GERAL',tasks:'DEMANDAS',calendar:'CALENDÁRIO EDITORIAL',studio:'STUDIO IA',library:'BIBLIOTECA CRIATIVA',approvals:'APROVAÇÕES',reports:'RELATÓRIOS',agents:'AGENTES DE IA',clients:'MEUS CLIENTES',portal:'PORTAL DO CLIENTE',integrations:'INTEGRAÇÕES'};
+  const views = {overview:'VISÃO GERAL',tasks:'DEMANDAS',calendar:'CALENDÁRIO',studio:'STUDIO IA',library:'BIBLIOTECA CRIATIVA',approvals:'APROVAÇÕES',reports:'RELATÓRIOS',agents:'AGENTES DE IA',clients:'MEUS CLIENTES',portal:'PORTAL DO CLIENTE',integrations:'INTEGRAÇÕES'};
   const today = new Intl.DateTimeFormat('en-CA',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const day = iso => new Date(iso+'T12:00:00Z');
   const iso = date => date.toISOString().slice(0,10);
@@ -99,30 +99,35 @@
   function renderOverview(){
     const posts=filtered(), future=posts.filter(p=>p.date.slice(0,10)>=today && p.status==='scheduled').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
     const tasks=visibleTasks(), activeTasks=tasks.filter(t=>t.stage!=='done');
+    const dueStats=window.UXDrivenLive?.enabled?window.UXDrivenDemandCalendar.dueSummary(tasks,today):null;
+    const nextTasks=activeTasks.filter(t=>t.due>=today).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,4);
     const review=posts.filter(p=>p.status==='review'||p.status==='pending').length;
     const scheduled=posts.filter(p=>p.status==='scheduled').length;
     const done=posts.filter(p=>p.status==='published').length;
     const work=posts.filter(p=>p.status==='draft'||p.status==='review'||p.status==='pending').slice(0,4);
+    const upcomingPanel=window.UXDrivenLive?.enabled?
+      (nextTasks.length?nextTasks.map(t=>`<div class="upcoming-item" role="button" tabindex="0" data-task="${t.id}">${clientThumb(t.client)}<div class="upcoming-copy"><strong>${escapeHTML(t.title)}</strong><span>${escapeHTML(clientOf(t.client).name)} · Prazo ${dateLabel(t.due)}</span></div><span class="live-stage-chip" style="--task-color:${stageOf(t.stage).dot}">${stageOf(t.stage).name}</span></div>`).join(''):'<p class="portal-muted">Nenhuma entrega futura cadastrada.</p>'):
+      (future.length?future.map(p=>`<div class="upcoming-item" role="button" tabindex="0" data-post="${p.id}">${clientThumb(p.client)}<div class="upcoming-copy"><strong>${escapeHTML(p.title)}</strong><span>${escapeHTML(clientOf(p.client).name)} · ${dateLabel(p.date)} às ${p.date.slice(11)}</span></div>${badge(p.status)}</div>`).join(''):'<p class="portal-muted">Nenhuma publicação agendada.</p>');
     return `
       ${header('CENTRAL DE OPERAÇÕES / 01','Sua operação. <em>Um passo à frente.</em>','Clientes, demandas e conteúdo em movimento — tudo em uma única visão.',`${clientSelect()}<button class="btn btn-primary" data-action="new-task">${ICON('plus')} Nova demanda</button>`)}
       ${window.UXDrivenLive?.enabled?`<div class="notice" style="margin:0 0 16px"><div><strong>Retornos dos clientes:</strong> ${decisionRows().length} decisão(ões) registrada(s) no Supabase. <button class="btn btn-small" data-view="approvals">Ver revisões e aprovações ${ICON('arrow-up-right')}</button></div></div>`:'' }
       <section class="hero"><div class="hero-content"><div class="eyebrow">A SUA NOVA CENTRAL CRIATIVA</div><h2>A criatividade encontra <em>a operação.</em></h2><p>Planeje demandas, crie conteúdos e acompanhe entregas de todas as suas marcas em um só lugar. Uma experiência que acompanha o seu ritmo.</p><div class="hero-actions"><button class="btn btn-primary" data-view="studio">Abrir Studio IA ${ICON('arrow-up-right')}</button><button class="btn btn-ghost" data-view="calendar">Explorar calendário ${ICON('arrow-right')}</button></div></div><div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="floating-preview"><div class="preview-toolbar"><span>uxdriven.</span><span>✳ SOCIAL</span></div><div class="preview-image"><strong>make it<br/><em>matter.</em></strong></div><div class="preview-captions"><span></span><i></i></div></div><div class="float-pill one">${ICON('sparkles')} AI CREATIVE</div><div class="float-pill two">${ICON('check-circle')} FLOW APPROVED</div></div></section>
       <div class="kpi-grid">
       ${kpi('Demandas em andamento',activeTasks.length,'OPERAÇÃO','kanban')}
-      ${kpi('Publicações agendadas',scheduled,'PRONTOS','calendar')}
+      ${kpi(window.UXDrivenLive?.enabled?'Prazos nos próximos 7 dias':'Publicações agendadas',window.UXDrivenLive?.enabled?dueStats.today+dueStats.next7:scheduled,'PRAZOS','calendar')}
       ${kpi('Aguardando revisão',window.UXDrivenLive?.enabled?tasks.filter(needsRevision).length:review,'AÇÃO NECESSÁRIA','check-circle','orange')}
-      ${kpi('Publicações concluídas',done,'PUBLICADOS','trending','purple')}
+      ${kpi(window.UXDrivenLive?.enabled?'Demandas concluídas':'Publicações concluídas',window.UXDrivenLive?.enabled?tasks.filter(t=>t.stage==='done').length:done,'ENTREGAS','trending','purple')}
       </div>
       <section class="panel panel-inner overview-demand-panel"><div class="panel-head"><div><div class="panel-kicker">AGENCY OPERATIONS / PRIORIDADES</div><h2 class="panel-title">Demandas que estão em movimento</h2></div><button class="link-button" data-view="tasks">Abrir Kanban ${ICON('arrow-up-right')}</button></div><div class="demand-snapshot">${activeTasks.sort((a,b)=>a.due.localeCompare(b.due)).slice(0,3).map(t=>`<button class="snapshot-card" data-task="${t.id}"><div class="snapshot-top">${clientThumb(t.client,true)}<span class="task-priority ${t.priority}">${priorityLabel(t.priority)} prioridade</span></div><strong>${escapeHTML(t.title)}</strong><span class="snapshot-meta">${escapeHTML(clientOf(t.client).name)} <i>·</i> ${dateLabel(t.due)}</span><div class="snapshot-status"><i style="background:${stageOf(t.stage).dot}"></i>${stageOf(t.stage).name}${ICON('arrow-up-right')}</div></button>`).join('')||`<p class="demo-note">Nenhuma demanda ativa neste cliente.</p>`}</div></section>
       <div class="content-grid">
-       <section class="panel panel-inner"><div class="panel-head"><div><div class="panel-kicker">PLANEJAMENTO / ESTA SEMANA</div><h2 class="panel-title">Calendário editorial</h2></div><button class="link-button" data-view="calendar">Ver calendário ${ICON('arrow-up-right')}</button></div>${renderWeek(true)}</section>
-       <section class="panel panel-inner"><div class="panel-head"><div><div class="panel-kicker">PRÓXIMOS PASSOS</div><h2 class="panel-title">Na fila de publicação</h2></div>${ICON('clock')}</div><div class="upcoming-list">${future.length?future.map(p=>`<div class="upcoming-item" role="button" tabindex="0" data-post="${p.id}">${clientThumb(p.client)}<div class="upcoming-copy"><strong>${escapeHTML(p.title)}</strong><span>${escapeHTML(clientOf(p.client).name)} · ${dateLabel(p.date)} às ${p.date.slice(11)}</span></div>${badge(p.status)}</div>`).join(''):`<p style="color:#8fa18e;font-size:12px">Nenhuma publicação agendada. Planeje a próxima.</p>`}</div></section>
+       <section class="panel panel-inner"><div class="panel-head"><div><div class="panel-kicker">PLANEJAMENTO / ESTA SEMANA</div><h2 class="panel-title">${window.UXDrivenLive?.enabled?'Calendário de demandas':'Calendário editorial'}</h2></div><button class="link-button" data-view="calendar">Ver calendário ${ICON('arrow-up-right')}</button></div>${renderWeek(true)}</section>
+       <section class="panel panel-inner"><div class="panel-head"><div><div class="panel-kicker">PRÓXIMOS PASSOS</div><h2 class="panel-title">${window.UXDrivenLive?.enabled?'Próximas entregas':'Na fila de publicação'}</h2></div>${ICON('clock')}</div><div class="upcoming-list">${upcomingPanel}</div></section>
       </div>
       <div class="secondary-grid"><section class="panel panel-inner"><div class="panel-head"><div><div class="panel-kicker">CREATIVE PIPELINE</div><h2 class="panel-title">Conteúdos em produção</h2></div><button class="link-button" data-view="approvals">Gerenciar fila ${ICON('arrow-up-right')}</button></div><div class="table-head"><span>CONTEÚDO</span><span>STATUS</span><span>DATA</span><span>AÇÃO</span></div>${work.length?work.map(p=>`<div class="task-row"><div class="task-name">${clientThumb(p.client,true)}<div><strong>${escapeHTML(p.title)}</strong><small>${escapeHTML(clientOf(p.client).name)} · ${p.format}</small></div></div>${badge(p.status)}<time>${dateLabel(p.date)}</time><button data-post="${p.id}">Detalhes ${ICON('arrow-up-right')}</button></div>`).join(''):noData('Sua fila de produção está vazia.')}</section>
       <section class="panel panel-inner ai-promo"><div class="ai-symbol">${ICON('sparkles')}</div><div class="panel-kicker">CREATIVE INTELLIGENCE / BETA</div><h3>Um parceiro criativo.<br/><span>Infinitas possibilidades.</span></h3><p>Explore ideias de campanhas, ganchos e legendas a partir do contexto de cada marca. O primeiro laboratório já está pronto para experimentar.</p><button class="btn btn-primary" data-view="studio">Criar com o Studio ${ICON('arrow-up-right')}</button><div class="demo-note">✳ EXEMPLOS GERADOS LOCALMENTE · SEM API DE IA</div></section></div>
       `;
   }
-  function kpi(label,n,tag,ico,tone=''){return `<div class="kpi-card"><div class="kpi-top"><span>${label}</span>${ICON(ico)}</div><div class="kpi-value">${String(n).padStart(2,'0')}</div><div class="kpi-bottom"><span class="kpi-tag ${tone}">${tag}</span><span>dados demonstrativos</span></div></div>`;}
+  function kpi(label,n,tag,ico,tone=''){return `<div class="kpi-card"><div class="kpi-top"><span>${label}</span>${ICON(ico)}</div><div class="kpi-value">${String(n).padStart(2,'0')}</div><div class="kpi-bottom"><span class="kpi-tag ${tone}">${tag}</span><span>${window.UXDrivenLive?.enabled?'Dados do Supabase':'dados demonstrativos'}</span></div></div>`;}
   function taskCard(t){
     return `<article class="kanban-card" data-task="${t.id}" data-task-drag="${t.id}" draggable="true" role="button" tabindex="0" aria-label="Abrir demanda ${escapeHTML(t.title)}"><div class="kanban-card-top"><span class="task-category">${ICON('layers')} ${escapeHTML(t.type)}</span><span class="task-priority ${t.priority}">${priorityLabel(t.priority)}</span></div><h3>${escapeHTML(t.title)}</h3>${reviewBadge(t)}<p>${escapeHTML(t.publicSummary)}</p><div class="task-card-divider"></div><div class="kanban-card-bottom"><div class="task-brand">${clientThumb(t.client,true)}<span>${escapeHTML(clientOf(t.client).name)}</span></div><span class="due-label ${t.due<today&&t.stage!=='done'?'late':''}">${ICON('clock')} ${dateLabel(t.due)}</span></div></article>`;
   }
@@ -155,12 +160,45 @@
       <div class="portal-footer-note">UXDRIVEN® / CLIENT EXPERIENCE <span>Prévia demonstrativa — não envie dados ou aprovações reais.</span></div></div>`;
   }
   function renderWeek(compact=false){
+    if(window.UXDrivenLive?.enabled)return window.UXDrivenDemandCalendar.week({tasks:visibleTasks(),today,week:state.week,compact});
     const start=shift(monday,state.week*7);
     const weekdayNames=['SEG','TER','QUA','QUI','SEX','SÁB','DOM'];
     const days=Array.from({length:7},(_,i)=>shift(start,i));
     return `<div class="calendar-week">${days.map((date,i)=>{const posts=filtered().filter(p=>p.date.slice(0,10)===date);return`<div class="day-col ${date===today?'today':''}" data-date="${date}" role="button" tabindex="0" aria-label="${weekdayNames[i]} ${date.slice(-2)}, ${posts.length} conteúdos"><span class="day-label">${weekdayNames[i]}</span><span class="day-number">${day(date).getUTCDate()}</span><div class="day-posts">${posts.length?posts.slice(0,2).map(p=>`<div class="day-post ${p.status==='review'?'purple':p.status==='pending'?'orange':p.status==='draft'?'red':''}" title="${escapeHTML(p.title)}"><i></i><span>${escapeHTML(p.title)}</span></div>`).join(''):'<div class="day-empty">·</div>'}</div></div>`}).join('')}</div><div class="calendar-legend"><span><i></i> Agendado</span><span><i></i> Em revisão</span><span><i></i> Aguardando</span><span><i></i> Rascunho</span>${compact?'':`<button class="link-button" data-action="prev-week" style="margin-left:auto">${ICON('chevron-left')}</button><button class="link-button" data-action="next-week">${ICON('chevron-right')}</button>`}</div>`;
   }
+
+  function renderLiveCalendar(){
+    const cal=window.UXDrivenDemandCalendar;
+    const tasks=visibleTasks(), summary=cal.dueSummary(tasks,today);
+    const stats=(label,n,theme='')=>`<div class="live-calendar-stat ${theme}"><span>${label}</span><strong>${String(n).padStart(2,'0')}</strong></div>`;
+    return `${header('OPERAÇÃO / PRAZOS REAIS','Cada entrega, <em>na data certa.</em>','O prazo de cada demanda é sincronizado com o Kanban e o Supabase. Clique em uma data para ver ou cadastrar entregas.',`${clientSelect()}<button class="btn btn-primary" data-action="new-task">${ICON('plus')} Nova demanda</button>`)}
+      <div class="live-calendar-summary">
+        ${stats('Demandas com prazo',summary.total)}
+        ${stats('Vencidas',summary.overdue,summary.overdue?'warning':'')}
+        ${stats('Vencem hoje',summary.today)}
+        ${stats('Próximos 7 dias',summary.next7)}
+      </div>
+      <div class="filters-row"><div class="segmented">
+        <button data-action="calendar-mode" data-mode="month" class="${state.calendarMode==='month'?'active':''}">Visão mensal</button>
+        <button data-action="calendar-mode" data-mode="week" class="${state.calendarMode==='week'?'active':''}">Visão semanal</button>
+        <button data-action="calendar-mode" data-mode="list" class="${state.calendarMode==='list'?'active':''}">Lista de demandas</button>
+      </div><span class="demo-note">DATAS DE ENTREGA DAS DEMANDAS</span></div>
+      ${state.calendarMode==='month'?cal.month({tasks,today,month:state.month}):
+        state.calendarMode==='week'?`<div class="panel panel-inner">
+          <div class="month-toolbar"><h2>Semana de ${dateLabel(shift(monday,state.week*7))}</h2><div class="month-controls">
+          <button data-action="prev-week" aria-label="Semana anterior">${ICON('chevron-left')}</button>
+          <button data-action="reset-week">Hoje</button>
+          <button data-action="next-week" aria-label="Próxima semana">${ICON('chevron-right')}</button></div></div>
+          ${cal.week({tasks,today,week:state.week})}</div>`:
+        cal.list({tasks,today,clientName:id=>clientOf(id).name})}
+      <p class="demo-note" style="margin-top:16px">✳ PRAZOS REAIS DE DEMANDAS · AS DATAS DE PUBLICAÇÃO NAS REDES SOCIAIS TERÃO UM CALENDÁRIO EDITORIAL SEPARADO.</p>`;
+  }
+  function calendarDayModal(date){
+    if(!window.UXDrivenLive?.enabled)return newPostModal(date);
+    modal('Entregas previstas',longDate(date),window.UXDrivenDemandCalendar.details({tasks:visibleTasks(),date,clientName:id=>clientOf(id).name}));
+  }
   function renderCalendar(){
+    if(window.UXDrivenLive?.enabled)return renderLiveCalendar();
     const current=new Date(day(today)); current.setUTCDate(1); current.setUTCMonth(current.getUTCMonth()+state.month);
     const first=new Date(current); const startDays=(first.getUTCDay()+6)%7;first.setUTCDate(1-startDays);
     const days=Array.from({length:42},(_,i)=>{const d=new Date(first);d.setUTCDate(d.getUTCDate()+i);return d});
@@ -313,13 +351,13 @@
       <div class="modal-actions"><button type="button" class="btn" data-action="close-modal">Cancelar</button>
       <button type="submit" class="btn btn-primary">Cadastrar cliente</button></div></form>`);
   }
-  function newTaskModal(stage='backlog'){
+  function newTaskModal(stage='backlog',initialDue=shift(today,3)){
     if(!clients.length){toast('Cadastre o primeiro cliente antes de criar demandas.');go('clients');return;}
     modal('Nova demanda','Na etapa “Com cliente”, a demanda será compartilhada automaticamente no portal daquele cliente.',`<form id="new-task-form">
       <div class="field"><label for="task-title">Nome da demanda</label><input class="input" id="task-title" name="title" maxlength="130" placeholder="Ex.: Criar landing page de campanha" required></div>
       <div class="form-row"><div class="field"><label for="task-client">Cliente</label><div class="select-wrap"><select id="task-client" name="client">${clientOptions(false)}</select></div></div><div class="field"><label for="task-type">Tipo de trabalho</label><div class="select-wrap"><select id="task-type" name="type"><option>Social media</option><option>Design visual</option><option>Landing page</option><option>Site institucional</option><option>Campanha</option><option>Produto digital</option><option>Estratégia</option><option>Relatório</option></select></div></div></div>
       <div class="form-row"><div class="field"><label for="task-stage">Etapa</label><div class="select-wrap"><select id="task-stage" name="stage">${taskStages.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select></div></div><div class="field"><label for="task-priority">Prioridade</label><div class="select-wrap"><select id="task-priority" name="priority"><option value="medium">Média</option><option value="high">Alta</option><option value="low">Baixa</option></select></div></div></div>
-      <div class="form-row"><div class="field"><label for="task-due">Prazo</label><input class="input" type="date" id="task-due" name="due" value="${shift(today,3)}" required></div><div class="field"><label for="task-assignee">Responsável</label><input class="input" id="task-assignee" name="assignee" value="Equipe UXDriven" required></div></div>
+      <div class="form-row"><div class="field"><label for="task-due">Prazo</label><input class="input" type="date" id="task-due" name="due" value="${initialDue}" required></div><div class="field"><label for="task-assignee">Responsável</label><input class="input" id="task-assignee" name="assignee" value="Equipe UXDriven" required></div></div>
       <div class="field"><label for="task-summary">Atualização visível ao cliente</label><textarea class="textarea" id="task-summary" name="publicSummary" placeholder="Resumo objetivo e sem informações internas..." required style="min-height:80px"></textarea></div>
       <div class="field"><label for="task-internal">Notas internas (não aparecem no portal)</label><textarea class="textarea" id="task-internal" name="internalNote" placeholder="Instruções internas da UXDriven..." style="min-height:75px"></textarea></div>
       <div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">${ICON('plus')} Criar demanda</button></div></form>`,true);
@@ -372,6 +410,7 @@
     if(a==='close-modal'||a==='close-backdrop'){if(a==='close-backdrop'&&e.target!==action)return;closeModal();}
     if(a==='new-post')newPostModal();
     if(a==='new-task')newTaskModal(action.dataset.stage||'backlog');
+    if(a==='new-task-for-date'){newTaskModal('backlog',action.dataset.date);return;}
     if(a==='prev-month'){state.month--;render();}
     if(a==='next-month'){state.month++;render();}
     if(a==='today-month'){state.month=0;render();}
@@ -415,7 +454,7 @@
     if((e.key==='Enter'||e.key===' ')&&e.target.matches('[data-date],[data-post],[data-task],[data-creative]')){e.preventDefault();e.target.click();}
     if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();searchModal();}
   });
-  document.addEventListener('click',e=>{const d=e.target.closest('[data-date]');if(d){newPostModal(d.dataset.date);}});
+  document.addEventListener('click',e=>{const d=e.target.closest('[data-date]');if(d){window.UXDrivenLive?.enabled?calendarDayModal(d.dataset.date):newPostModal(d.dataset.date);}});
   let draggingTask=null;
   document.addEventListener('dragstart',e=>{const c=e.target.closest('[data-task-drag]');if(c){draggingTask=c.dataset.taskDrag;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggingTask);c.classList.add('dragging');}});
   document.addEventListener('dragover',e=>{const zone=e.target.closest('[data-drop-stage]');if(zone&&draggingTask){e.preventDefault();e.dataTransfer.dropEffect='move';zone.classList.add('drop-target');}});
