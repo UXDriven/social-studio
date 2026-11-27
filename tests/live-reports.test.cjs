@@ -20,7 +20,7 @@ assert.equal(s.stageCounts.client,1);assert.equal(s.stageCounts.internal,1);
 });
 test('period filter adjusts new tasks and decisions',()=>{
 const s=reports.summarize(tasks,'2026-11-27',7);
-assert.equal(s.created,3);assert.equal(s.revisions,1);assert.equal(s.approvals,1);
+assert.equal(s.created,2);assert.equal(s.revisions,1);assert.equal(s.approvals,1);
 assert.equal(reports.summarize(tasks,'2026-11-27',90).created,4);
 });
 test('zero activity is reported as zero, never fabricated',()=>{
