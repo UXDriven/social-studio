@@ -60,7 +60,22 @@
     const db=window.supabase.createClient(cfg.url,cfg.key,{auth:{persistSession:true,autoRefreshToken:true}});
     const signOut=async()=>{await db.auth.signOut();location.reload();};
     const makeClient=(c,i)=>({id:c.id,name:c.name,type:c.category||"Cliente",short:c.name.split(/\s+/).slice(0,2).map(t=>t[0]).join("").toUpperCase(),hex:["#573999","#307446","#bc8731","#385b82"][i%4],light:"#f6ffe9",slug:"ux"});
-    const makeTask=(t,note="")=>({id:t.id,client:t.client_id,title:t.title,type:t.task_type,stage:t.stage,priority:t.priority,assignee:"Equipe UXDriven",due:t.due_date||new Date().toISOString().slice(0,10),publicSummary:t.public_summary||"",internalNote:note,clientVisible:t.client_visible,comments:[]});
+    const makeTask=(t,note="")=>({id:t.id,client:t.client_id,title:t.title,type:t.task_type,stage:t.stage,priority:t.priority,assignee:"Equipe UXDriven",due:t.due_date||new Date().toISOString().slice(0,10),publicSummary:t.public_summary||"",internalNote:note,clientVisible:t.client_visible,updatedAt:t.updated_at||"",comments:[],approvals:[]});
+    const hydrateTasks=(rows,notes,comments,decisions,userId)=>{
+      const notesById=new Map((notes||[]).map(n=>[n.task_id,n.body]));
+      const tasks=(rows||[]).map(t=>makeTask(t,notesById.get(t.id)||""));
+      const byId=new Map(tasks.map(t=>[t.id,t]));
+      for(const co of comments||[]){
+        const task=byId.get(co.task_id);
+        if(task)task.comments.push({author:co.author_id===userId?"Você":"Cliente / participante",text:co.body,visibility:co.visibility,created_at:co.created_at});
+      }
+      for(const approval of decisions||[]){
+        const task=byId.get(approval.task_id);
+        if(task)task.approvals.push(approval);
+      }
+      for(const task of tasks)task.approvals.sort((a,b)=>b.created_at.localeCompare(a.created_at));
+      return tasks;
+    };
     const fail=message=>{
       screen("ACESSO NÃO LIBERADO","Conta sem <em>workspace.</em>",message,btn("signout","Sair desta conta"));
       document.getElementById("signout").onclick=signOut;
@@ -90,22 +105,29 @@
       const org=await db.from("organizations").select("id,name").eq("id",member.organization_id).single();
       if(org.error)throw org.error;
       const organization=org.data;
-      const [c,t,n,cm]=await Promise.all([
+      const [c,t,n,cm,ap]=await Promise.all([
         db.from("clients").select("id,name,category,is_active").eq("organization_id",organization.id).order("name"),
-        db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible").eq("organization_id",organization.id),
+        db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at").eq("organization_id",organization.id),
         db.from("task_internal_notes").select("task_id,body").eq("organization_id",organization.id),
-        db.from("task_comments").select("task_id,body,visibility,author_id").eq("organization_id",organization.id)
+        db.from("task_comments").select("task_id,body,visibility,author_id,created_at").eq("organization_id",organization.id),
+        db.from("task_approvals").select("id,task_id,decision,message,actor_id,created_at").eq("organization_id",organization.id)
       ]);
-      for(const r of [c,t,n,cm])if(r.error)throw r.error;
-      const notes=new Map((n.data||[]).map(x=>[x.task_id,x.body]));
-      const tasks=(t.data||[]).map(x=>makeTask(x,notes.get(x.id)||""));
-      for(const co of cm.data||[]) {
-        const task=tasks.find(x=>x.id===co.task_id);
-        if(task)task.comments.push({author:co.author_id===user.id?"Você":"Participante",text:co.body,visibility:co.visibility});
-      }
+      for(const r of [c,t,n,cm,ap])if(r.error)throw r.error;
+      const tasks=hydrateTasks(t.data,n.data,cm.data,ap.data,user.id);
       const live={
         enabled:true,user,role:member.role,organization,
         clients:(c.data||[]).map(makeClient),tasks,signOut,
+        async refreshWorkspace(){
+          const [t,n,cm,ap]=await Promise.all([
+            db.from("tasks").select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible,updated_at").eq("organization_id",organization.id),
+            db.from("task_internal_notes").select("task_id,body").eq("organization_id",organization.id),
+            db.from("task_comments").select("task_id,body,visibility,author_id,created_at").eq("organization_id",organization.id),
+            db.from("task_approvals").select("id,task_id,decision,message,actor_id,created_at").eq("organization_id",organization.id)
+          ]);
+          for(const result of [t,n,cm,ap])if(result.error)throw result.error;
+          this.tasks=hydrateTasks(t.data,n.data,cm.data,ap.data,user.id);
+          return this.tasks;
+        },
         async createClient(input){
           const r=await db.from("clients").insert({organization_id:organization.id,name:input.name,category:input.category||""}).select("id,name,category").single();
           if(r.error)throw r.error;

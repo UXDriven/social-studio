@@ -90,6 +90,12 @@
   const headButton=()=>`<button class="btn btn-primary" data-action="new-post">${ICON('plus')} Novo conteúdo</button>`;
   const noData=txt=>`<div class="empty-state">${ICON('calendar')}<p>${txt}</p><button class="btn btn-small" data-action="new-post">Adicionar conteúdo ${ICON('plus')}</button></div>`;
 
+
+  const decisionRows=()=>visibleTasks().flatMap(t=>(t.approvals||[]).map(a=>({...a,task:t}))).sort((a,b)=>b.created_at.localeCompare(a.created_at));
+  const needsRevision=t=>t.stage==='internal' && t.approvals?.[0]?.decision==='changes_requested';
+  const feedbackDate=x=>x?new Date(x).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Recife'}):'';
+  const reviewBadge=t=>needsRevision(t)?`<span class="status-chip pending" style="display:inline-flex;margin:8px 0 0">Ajustes solicitados pelo cliente</span>`:'';
+  const decisionHistory=t=>(t.approvals||[]).map(a=>`<div class="task-comment" style="display:block;margin:10px 0;padding:14px;border-left:3px solid ${a.decision==='changes_requested'?'#f4ab5d':'#b7e959'}"><strong>${a.decision==='changes_requested'?'↻ Ajustes solicitados':'✓ Entrega aprovada'} <small style="color:var(--muted);font-weight:400">· ${feedbackDate(a.created_at)}</small></strong><span style="display:block;margin-top:6px;white-space:pre-wrap">${escapeHTML(a.message||'Sem observações adicionais.')}</span></div>`).join('');
   function renderOverview(){
     const posts=filtered(), future=posts.filter(p=>p.date.slice(0,10)>=today && p.status==='scheduled').sort((a,b)=>a.date.localeCompare(b.date)).slice(0,4);
     const tasks=visibleTasks(), activeTasks=tasks.filter(t=>t.stage!=='done');
@@ -99,11 +105,12 @@
     const work=posts.filter(p=>p.status==='draft'||p.status==='review'||p.status==='pending').slice(0,4);
     return `
       ${header('CENTRAL DE OPERAÇÕES / 01','Sua operação. <em>Um passo à frente.</em>','Clientes, demandas e conteúdo em movimento — tudo em uma única visão.',`${clientSelect()}<button class="btn btn-primary" data-action="new-task">${ICON('plus')} Nova demanda</button>`)}
+      ${window.UXDrivenLive?.enabled?`<div class="notice" style="margin:0 0 16px"><div><strong>Retornos dos clientes:</strong> ${decisionRows().length} decisão(ões) registrada(s) no Supabase. <button class="btn btn-small" data-view="approvals">Ver revisões e aprovações ${ICON('arrow-up-right')}</button></div></div>`:'' }
       <section class="hero"><div class="hero-content"><div class="eyebrow">A SUA NOVA CENTRAL CRIATIVA</div><h2>A criatividade encontra <em>a operação.</em></h2><p>Planeje demandas, crie conteúdos e acompanhe entregas de todas as suas marcas em um só lugar. Uma experiência que acompanha o seu ritmo.</p><div class="hero-actions"><button class="btn btn-primary" data-view="studio">Abrir Studio IA ${ICON('arrow-up-right')}</button><button class="btn btn-ghost" data-view="calendar">Explorar calendário ${ICON('arrow-right')}</button></div></div><div class="hero-visual" aria-hidden="true"><div class="orbit"></div><div class="floating-preview"><div class="preview-toolbar"><span>uxdriven.</span><span>✳ SOCIAL</span></div><div class="preview-image"><strong>make it<br/><em>matter.</em></strong></div><div class="preview-captions"><span></span><i></i></div></div><div class="float-pill one">${ICON('sparkles')} AI CREATIVE</div><div class="float-pill two">${ICON('check-circle')} FLOW APPROVED</div></div></section>
       <div class="kpi-grid">
       ${kpi('Demandas em andamento',activeTasks.length,'OPERAÇÃO','kanban')}
       ${kpi('Publicações agendadas',scheduled,'PRONTOS','calendar')}
-      ${kpi('Aguardando revisão',review,'AÇÃO NECESSÁRIA','check-circle','orange')}
+      ${kpi('Aguardando revisão',window.UXDrivenLive?.enabled?tasks.filter(needsRevision).length:review,'AÇÃO NECESSÁRIA','check-circle','orange')}
       ${kpi('Publicações concluídas',done,'PUBLICADOS','trending','purple')}
       </div>
       <section class="panel panel-inner overview-demand-panel"><div class="panel-head"><div><div class="panel-kicker">AGENCY OPERATIONS / PRIORIDADES</div><h2 class="panel-title">Demandas que estão em movimento</h2></div><button class="link-button" data-view="tasks">Abrir Kanban ${ICON('arrow-up-right')}</button></div><div class="demand-snapshot">${activeTasks.sort((a,b)=>a.due.localeCompare(b.due)).slice(0,3).map(t=>`<button class="snapshot-card" data-task="${t.id}"><div class="snapshot-top">${clientThumb(t.client,true)}<span class="task-priority ${t.priority}">${priorityLabel(t.priority)} prioridade</span></div><strong>${escapeHTML(t.title)}</strong><span class="snapshot-meta">${escapeHTML(clientOf(t.client).name)} <i>·</i> ${dateLabel(t.due)}</span><div class="snapshot-status"><i style="background:${stageOf(t.stage).dot}"></i>${stageOf(t.stage).name}${ICON('arrow-up-right')}</div></button>`).join('')||`<p class="demo-note">Nenhuma demanda ativa neste cliente.</p>`}</div></section>
@@ -117,7 +124,7 @@
   }
   function kpi(label,n,tag,ico,tone=''){return `<div class="kpi-card"><div class="kpi-top"><span>${label}</span>${ICON(ico)}</div><div class="kpi-value">${String(n).padStart(2,'0')}</div><div class="kpi-bottom"><span class="kpi-tag ${tone}">${tag}</span><span>dados demonstrativos</span></div></div>`;}
   function taskCard(t){
-    return `<article class="kanban-card" data-task="${t.id}" data-task-drag="${t.id}" draggable="true" role="button" tabindex="0" aria-label="Abrir demanda ${escapeHTML(t.title)}"><div class="kanban-card-top"><span class="task-category">${ICON('layers')} ${escapeHTML(t.type)}</span><span class="task-priority ${t.priority}">${priorityLabel(t.priority)}</span></div><h3>${escapeHTML(t.title)}</h3><p>${escapeHTML(t.publicSummary)}</p><div class="task-card-divider"></div><div class="kanban-card-bottom"><div class="task-brand">${clientThumb(t.client,true)}<span>${escapeHTML(clientOf(t.client).name)}</span></div><span class="due-label ${t.due<today&&t.stage!=='done'?'late':''}">${ICON('clock')} ${dateLabel(t.due)}</span></div></article>`;
+    return `<article class="kanban-card" data-task="${t.id}" data-task-drag="${t.id}" draggable="true" role="button" tabindex="0" aria-label="Abrir demanda ${escapeHTML(t.title)}"><div class="kanban-card-top"><span class="task-category">${ICON('layers')} ${escapeHTML(t.type)}</span><span class="task-priority ${t.priority}">${priorityLabel(t.priority)}</span></div><h3>${escapeHTML(t.title)}</h3>${reviewBadge(t)}<p>${escapeHTML(t.publicSummary)}</p><div class="task-card-divider"></div><div class="kanban-card-bottom"><div class="task-brand">${clientThumb(t.client,true)}<span>${escapeHTML(clientOf(t.client).name)}</span></div><span class="due-label ${t.due<today&&t.stage!=='done'?'late':''}">${ICON('clock')} ${dateLabel(t.due)}</span></div></article>`;
   }
   function renderTasks(){
     const tasks=visibleTasks();
@@ -196,7 +203,26 @@
       <div class="filters-row"><div class="segmented"><button class="${state.filter==='all'?'active':''}" data-filter="all">Todos</button><button class="${state.filter==='aurora'?'active':''}" data-filter="aurora">Aurora Pessoas</button><button class="${state.filter==='atlas'?'active':''}" data-filter="atlas">Atlas Sports</button><button class="${state.filter==='ux'?'active':''}" data-filter="ux">UXDriven</button></div><span class="demo-note" style="margin:0">${items.length} REFERÊNCIAS VISUAIS</span></div>
       <div class="library-grid">${items.length?items.map(a=>`<article class="creative-card"><div class="creative-art ${a.type}" data-creative="${a.id}" role="button" tabindex="0"><span class="art-label">${clientOf(a.client).name.toUpperCase()} / CREATIVE</span><span class="art-text">${escapeHTML(a.title)}</span><span class="art-symbol">✳</span></div><div class="creative-meta"><strong>${a.name}</strong><small>${escapeHTML(clientOf(a.client).name)}</small><div class="creative-bottom"><span class="creative-format">${a.format}</span><button data-creative="${a.id}">Explorar ${ICON('arrow-up-right')}</button></div></div></article>`).join(''):noData('Nenhum criativo neste filtro.')}</div>`;
   }
+
+  function renderLiveApprovals(){
+    const entries=decisionRows();
+    const revisions=entries.filter(a=>a.decision==='changes_requested');
+    const approvals=entries.filter(a=>a.decision==='approved');
+    const awaiting=visibleTasks().filter(t=>t.stage==='client');
+    const cards=events=>events.map(a=>{
+      const t=a.task;
+      const active=needsRevision(t) && t.approvals?.[0]?.id===a.id;
+      return `<article class="approval-card"><div class="approval-art thumb-ux">${escapeHTML(clientOf(t.client).short||'UX')}</div><div style="min-width:0;flex:1"><div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><span class="demo-note">${escapeHTML(clientOf(t.client).name)} · ${feedbackDate(a.created_at)}</span><span class="status-chip ${a.decision==='changes_requested'?'pending':'approved'}">${a.decision==='changes_requested'?(active?'AJUSTES SOLICITADOS · AÇÃO NECESSÁRIA':'AJUSTES SOLICITADOS · HISTÓRICO'):'APROVADO PELO CLIENTE'}</span></div><h3>${escapeHTML(t.title)}</h3><p style="white-space:pre-wrap">${escapeHTML(a.message||'Sem observações adicionais.')}</p><div class="approval-actions"><button class="btn btn-small" data-task="${t.id}">Abrir demanda ${ICON('arrow-up-right')}</button></div></div></article>`;
+    }).join('');
+    return `${header('FEEDBACK REAL / CLIENTES','Revisões que viram <em>ação.</em>','Decisões enviadas pelos clientes, sincronizadas do Supabase.',clientSelect())}
+      <div class="notice">${ICON('check-circle')}<div><strong>Feedback conectado.</strong> A solicitação de ajustes move a demanda para Revisão interna; a aprovação a conclui. Registros anteriores continuam disponíveis neste histórico.</div></div>
+      <div class="task-summary-bar"><div><span class="task-summary-label">SOLICITAÇÕES DE AJUSTES</span><strong>${String(revisions.length).padStart(2,'0')}</strong></div><div><span class="task-summary-label">AJUSTES EM ANDAMENTO</span><strong>${String(visibleTasks().filter(needsRevision).length).padStart(2,'0')}</strong></div><div><span class="task-summary-label">APROVAÇÕES RECEBIDAS</span><strong>${String(approvals.length).padStart(2,'0')}</strong></div><div><span class="task-summary-label">AGUARDANDO CLIENTE</span><strong>${String(awaiting.length).padStart(2,'0')}</strong></div></div>
+      <section class="panel panel-inner" style="margin:18px 0"><div class="panel-head"><h2 class="panel-title">Solicitações de ajustes</h2><span class="status-chip pending">${revisions.length} REGISTROS</span></div>${revisions.length?cards(revisions):'<p class="portal-muted">Nenhum ajuste solicitado ainda.</p>'}</section>
+      <section class="panel panel-inner" style="margin:18px 0"><div class="panel-head"><h2 class="panel-title">Entregas aprovadas pelos clientes</h2><span class="status-chip approved">${approvals.length} REGISTROS</span></div>${approvals.length?cards(approvals):'<p class="portal-muted">Nenhuma entrega aprovada ainda.</p>'}</section>
+      <section class="panel panel-inner"><div class="panel-head"><h2 class="panel-title">Aguardando resposta do cliente</h2><span class="status-chip pending">${awaiting.length} DEMANDAS</span></div>${awaiting.map(t=>`<div class="demand-list-row"><div class="task-list-title"><strong>${escapeHTML(t.title)}</strong><small>${escapeHTML(clientOf(t.client).name)}</small></div><button class="btn btn-small" data-task="${t.id}">Ver demanda</button></div>`).join('')||'<p class="portal-muted">Nenhuma demanda aguardando cliente no momento.</p>'}</section>`;
+  }
   function renderApprovals(){
+    if(window.UXDrivenLive?.enabled)return renderLiveApprovals();
     const items=filtered().filter(p=>['pending','review'].includes(p.status));
     const ready=filtered().filter(p=>p.status==='approved');
     return `${header('APPROVAL WORKFLOW / 05','Mais fluidez. <em>Menos retrabalho.</em>','Centralize o que precisa de feedback e mantenha a equipe em sintonia.',`${clientSelect()}${headButton()}`)}
@@ -242,7 +268,7 @@
     root.innerHTML=({overview:renderOverview,tasks:renderTasks,calendar:renderCalendar,studio:renderStudio,library:renderLibrary,approvals:renderApprovals,reports:renderReports,agents:renderAgents,clients:renderClients,portal:renderPortal,integrations:renderIntegrations}[state.view]||renderOverview)();
     $('#breadcrumb').textContent=views[state.view];document.title=`${views[state.view]} — UXDriven Social Studio`;
     document.querySelectorAll('[data-view]').forEach(el=>{if(el.classList.contains('nav-item'))el.classList.toggle('active',el.dataset.view===state.view)});
-    const count=state.posts.filter(p=>['pending','review'].includes(p.status)).length;$('#approval-counter').textContent=count;
+    const count=window.UXDrivenLive?.enabled?visibleTasks().filter(needsRevision).length:state.posts.filter(p=>['pending','review'].includes(p.status)).length;$('#approval-counter').textContent=count;
     $('#task-counter').textContent=state.tasks.filter(t=>t.stage!=='done').length;
     const selector=$('#client-select');if(selector)selector.value=state.client;
     const portalSelect=$('#portal-client-select');if(portalSelect){if(window.UXDrivenLive?.enabled&&clients.length&&!clients.some(c=>c.id===state.portalClient))state.portalClient=clients[0].id;portalSelect.value=state.portalClient;}
@@ -251,7 +277,7 @@
     const aiTone=$('#ai-tone');if(aiTone)aiTone.value=state.generatedTone;
     const per=$('#period-select');if(per)per.value=state.period;
   }
-  function go(view){if(!(view in views))return;closeModal();state.view=view;location.hash=view;$('#sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});render();}
+  function go(view){if(!(view in views))return;closeModal();state.view=view;location.hash=view;$('#sidebar').classList.remove('open');window.scrollTo({top:0,behavior:'smooth'});render();if(window.UXDrivenLive?.enabled)refreshLiveWorkspace();}
   function toast(message){const n=document.createElement('div');n.className='toast';n.textContent=message;$('#toast-root').appendChild(n);setTimeout(()=>n.remove(),3400);}
   function modal(title,sub,body,wide=false){$('#modal-root').innerHTML=`<div class="modal-backdrop" data-action="close-backdrop"><section class="modal ${wide?'wide':''}" role="dialog" aria-modal="true" aria-label="${escapeHTML(title)}"><div class="modal-top"><div><h2>${escapeHTML(title)}</h2><div class="modal-sub">${escapeHTML(sub||'')}</div></div><button class="modal-close" data-action="close-modal" aria-label="Fechar">${ICON('x')}</button></div>${body}</section></div>`;const first=$('.modal input,.modal textarea');if(first)first.focus();}
   function closeModal(){$('#modal-root').innerHTML='';}
@@ -304,11 +330,12 @@
     const t=state.tasks.find(x=>x.id===id);if(!t)return;
     const stage=stageOf(t.stage);
     const comments=(t.comments||[]).filter(c=>!clientMode||c.visibility==='shared').map(c=>`<div class="task-comment"><strong>${escapeHTML(c.author||'Cliente')}</strong><span>${escapeHTML(c.text)}</span></div>`).join('');
+    const decisions=window.UXDrivenLive?.enabled?decisionHistory(t):'';
     const information=`<div class="post-detail-card"><div class="panel-kicker">${escapeHTML(clientOf(t.client).name.toUpperCase())} / ${escapeHTML(t.type).toUpperCase()}</div><h3>${escapeHTML(t.title)}</h3><p>${escapeHTML(t.publicSummary)}</p></div><div class="detail-grid"><div class="detail-kpi"><span>ETAPA ATUAL</span><strong style="font-size:15px;color:${stage.dot}">${stage.name}</strong></div><div class="detail-kpi"><span>PREVISÃO DE ENTREGA</span><strong style="font-size:16px">${longDate(t.due)}</strong></div></div>`;
     if(clientMode){
       modal('Acompanhar demanda',`Portal de ${escapeHTML(clientOf(t.client).name)} · demonstração`,`${information}<div class="section-topline">CONVERSA SOBRE ESTA ENTREGA</div>${comments||'<p class="portal-muted">Nenhum comentário até agora.</p>'}<form id="client-comment-form" data-id="${t.id}"><div class="field"><label for="client-comment">Adicionar comentário</label><textarea class="textarea" id="client-comment" name="comment" placeholder="Escreva uma dúvida ou observação para a equipe..." style="min-height:74px" required></textarea></div><div class="modal-actions"><button class="btn btn-small" type="submit">${ICON('message')} Enviar comentário (demo)</button></div></form>${t.stage==='client'?`<div class="divider"></div><div class="modal-actions"><button class="btn" data-client-revise="${t.id}">Solicitar ajustes</button><button class="btn btn-primary" data-client-approve="${t.id}">Aprovar entrega ${ICON('check-circle')}</button></div>`:''}`,true);
     }else{
-      modal('Gerenciar demanda',`Operação interna · ${escapeHTML(clientOf(t.client).name)}`,`${information}<div class="section-topline">GESTÃO DA ENTREGA</div><form id="edit-task-form" data-id="${t.id}"><div class="form-row"><div class="field"><label for="edit-task-stage">Etapa</label><div class="select-wrap"><select id="edit-task-stage" name="stage">${taskStages.map(s=>`<option value="${s.id}" ${s.id===t.stage?'selected':''}>${s.name}</option>`).join('')}</select></div></div><div class="field"><label for="edit-task-due">Prazo</label><input class="input" type="date" id="edit-task-due" name="due" value="${t.due}" required></div></div><div class="field"><label for="edit-task-summary">Resumo compartilhado com cliente</label><textarea class="textarea" id="edit-task-summary" name="publicSummary" required style="min-height:85px">${escapeHTML(t.publicSummary)}</textarea></div><div class="field" style="margin:14px 0"><label style="display:flex;align-items:flex-start;gap:11px;cursor:pointer"><input type="checkbox" name="clientVisible" ${t.clientVisible?'checked':''} style="accent-color:var(--lime);margin-top:3px"><span>Compartilhar esta demanda com o cliente <small style="display:block;margin-top:4px;color:var(--muted)">Somente o resumo público, etapa e prazo serão exibidos. Notas internas nunca são compartilhadas.</small></span></label></div><div class="field"><label for="edit-task-note">Notas internas (somente UXDriven)</label><textarea class="textarea" id="edit-task-note" name="internalNote" style="min-height:85px">${escapeHTML(t.internalNote)}</textarea></div><div class="section-topline">COMENTÁRIOS DO CLIENTE</div>${comments||'<p class="portal-muted">Nenhum comentário do cliente.</p>'}<div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">Salvar demanda ${ICON('check-circle')}</button></div></form>`,true);
+      modal('Gerenciar demanda',`Operação interna · ${escapeHTML(clientOf(t.client).name)}`,`${information}<div class="section-topline">GESTÃO DA ENTREGA</div><form id="edit-task-form" data-id="${t.id}"><div class="form-row"><div class="field"><label for="edit-task-stage">Etapa</label><div class="select-wrap"><select id="edit-task-stage" name="stage">${taskStages.map(s=>`<option value="${s.id}" ${s.id===t.stage?'selected':''}>${s.name}</option>`).join('')}</select></div></div><div class="field"><label for="edit-task-due">Prazo</label><input class="input" type="date" id="edit-task-due" name="due" value="${t.due}" required></div></div><div class="field"><label for="edit-task-summary">Resumo compartilhado com cliente</label><textarea class="textarea" id="edit-task-summary" name="publicSummary" required style="min-height:85px">${escapeHTML(t.publicSummary)}</textarea></div><div class="field" style="margin:14px 0"><label style="display:flex;align-items:flex-start;gap:11px;cursor:pointer"><input type="checkbox" name="clientVisible" ${t.clientVisible?'checked':''} style="accent-color:var(--lime);margin-top:3px"><span>Compartilhar esta demanda com o cliente <small style="display:block;margin-top:4px;color:var(--muted)">Somente o resumo público, etapa e prazo serão exibidos. Notas internas nunca são compartilhadas.</small></span></label></div><div class="field"><label for="edit-task-note">Notas internas (somente UXDriven)</label><textarea class="textarea" id="edit-task-note" name="internalNote" style="min-height:85px">${escapeHTML(t.internalNote)}</textarea></div><div class="section-topline">REVISÕES E APROVAÇÕES RECEBIDAS</div>${decisions||'<p class="portal-muted">Nenhum retorno formal do cliente.</p>'}<div class="section-topline">COMENTÁRIOS DO CLIENTE</div>${comments||'<p class="portal-muted">Nenhum comentário do cliente.</p>'}<div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">Salvar demanda ${ICON('check-circle')}</button></div></form>`,true);
     }
   }
   function clientRevisionModal(id){const t=state.tasks.find(x=>x.id===id);if(!t||t.stage!=='client')return;modal('Solicitar ajustes',escapeHTML(t.title),`<form id="client-revision-form" data-id="${t.id}"><div class="field"><label for="revision-note">O que você gostaria de ajustar?</label><textarea class="textarea" id="revision-note" name="comment" required placeholder="Descreva o ajuste para a equipe UXDriven..."></textarea></div><div class="modal-actions"><button class="btn" type="button" data-action="close-modal">Cancelar</button><button class="btn btn-primary" type="submit">Enviar solicitação (demo)</button></div></form>`);}
@@ -393,9 +420,30 @@
   document.addEventListener('dragend',()=>{draggingTask=null;document.querySelectorAll('.dragging,.drop-target').forEach(el=>el.classList.remove('dragging','drop-target'));});
   function searchModal(){modal('Buscar no Social Studio','Encontre uma publicação pelo título ou cliente.',`<div class="field"><label for="search-input">Buscar conteúdo</label><input class="input" id="search-input" placeholder="Digite um nome, tema ou cliente..." autocomplete="off"></div><div id="search-results" class="panel" style="margin-top:15px"></div>`,true);function update(){const val=$('#search-input').value.toLowerCase().trim();const found=state.posts.filter(p=>p.title.toLowerCase().includes(val)||clientOf(p.client).name.toLowerCase().includes(val)).slice(0,8);$('#search-results').innerHTML=renderList(found);}$('#search-input').addEventListener('input',update);update();}
   $('#search-btn').addEventListener('click',searchModal);
-  $('#notification-btn').addEventListener('click',()=>{const n=state.posts.filter(p=>['review','pending'].includes(p.status)).length;modal('Sua central de atenção','Tudo o que merece sua próxima ação',`<div class="notice">${ICON('bell')}<div>Existem <strong>${n} conteúdo(s)</strong> aguardando feedback no ambiente de demonstração.</div></div><div class="modal-actions"><button class="btn btn-primary" data-view="approvals">Ver aprovações ${ICON('arrow-up-right')}</button></div>`);});
+  $('#notification-btn').addEventListener('click',()=>{if(window.UXDrivenLive?.enabled){go('approvals');return;}const n=state.posts.filter(p=>['review','pending'].includes(p.status)).length;modal('Sua central de atenção','Tudo o que merece sua próxima ação',`<div class="notice">${ICON('bell')}<div>Existem <strong>${n} conteúdo(s)</strong> aguardando feedback no ambiente de demonstração.</div></div><div class="modal-actions"><button class="btn btn-primary" data-view="approvals">Ver aprovações ${ICON('arrow-up-right')}</button></div>`);});
   $('#mobile-menu').addEventListener('click',()=>$('#sidebar').classList.toggle('open'));
   $('#side-new').addEventListener('click',()=>newPostModal());
   window.addEventListener('hashchange',()=>{const v=location.hash.slice(1);if(v in views && v!==state.view){state.view=v;render();}});
+
+  let liveRefreshBusy=false;
+  let reviewIds=new Set(state.tasks.flatMap(t=>(t.approvals||[]).map(a=>a.id)));
+  async function refreshLiveWorkspace(){
+    if(!window.UXDrivenLive?.enabled||liveRefreshBusy||document.hidden||$('#modal-root .modal'))return;
+    liveRefreshBusy=true;
+    try{
+      const fresh=await window.UXDrivenLive.refreshWorkspace();
+      const incoming=fresh.flatMap(t=>(t.approvals||[])).filter(a=>a.decision==='changes_requested'&&!reviewIds.has(a.id));
+      state.tasks=fresh;
+      reviewIds=new Set(fresh.flatMap(t=>(t.approvals||[]).map(a=>a.id)));
+      render();
+      if(incoming.length)toast(incoming.length===1?'Novo pedido de ajustes recebido.':'Novos pedidos de ajustes recebidos.');
+    }catch(error){console.error('Falha ao atualizar retornos do cliente',error);}
+    finally{liveRefreshBusy=false;}
+  }
+  if(window.UXDrivenLive?.enabled){
+    window.setInterval(refreshLiveWorkspace,20000);
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshLiveWorkspace();});
+    window.addEventListener('focus',refreshLiveWorkspace);
+  }
   render();
 })();

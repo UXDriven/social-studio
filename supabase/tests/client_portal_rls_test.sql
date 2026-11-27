@@ -5,7 +5,7 @@
 
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(22);
+select plan(26);
 
 -- The IDs are reserved for this rollback-only fixture; no real client is used.
 insert into auth.users (id, email) values
@@ -39,9 +39,7 @@ insert into public.task_comments(id,task_id,organization_id,client_id,author_id,
   ('66000000-0000-4000-8000-000000000001','44000000-0000-4000-8000-000000000002','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000003','shared','A shared comment'),
   ('66000000-0000-4000-8000-000000000002','44000000-0000-4000-8000-000000000002','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000003','internal','A internal comment'),
   ('66000000-0000-4000-8000-000000000003','44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000003','shared','B shared comment');
-insert into public.task_approvals(id,task_id,organization_id,client_id,actor_id,decision) values
-  ('77000000-0000-4000-8000-000000000001','44000000-0000-4000-8000-000000000002','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000001','changes_requested'),
-  ('77000000-0000-4000-8000-000000000002','44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000002','approved');
+
 
 -- CLIENT A: all reads must be restricted to explicit shared A records.
 set local role authenticated;
@@ -61,9 +59,9 @@ select is_empty(
 select results_eq(
   $$select id from public.task_comments where id::text like '66000000-%' order by id$$,
   array['66000000-0000-4000-8000-000000000001'::uuid], 'A sees only shared comments A');
-select results_eq(
+select is_empty(
   $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
-  array['77000000-0000-4000-8000-000000000001'::uuid], 'A sees only approvals A');
+  'A sees no other client approvals');
 select is_empty(
   $$update public.tasks set title='Unexpected update' where id='44000000-0000-4000-8000-000000000002'::uuid returning id$$,
   'A cannot update agency tasks');
@@ -82,6 +80,9 @@ select results_eq(
   $$insert into public.task_approvals(id,task_id,organization_id,client_id,actor_id,decision)
     values ('77000000-0000-4000-8000-000000000003','44000000-0000-4000-8000-000000000002','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000001','11000000-0000-4000-8000-000000000001','approved') returning id$$,
   array['77000000-0000-4000-8000-000000000003'::uuid], 'A can approve own shared task');
+select results_eq(
+  $$select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000002'::uuid$$,
+  array['done'::text], 'An approval moves its task to Done automatically');
 select throws_ok(
   $$insert into public.task_approvals(task_id,organization_id,client_id,actor_id,decision)
     values ('44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000001','approved')$$,
@@ -109,9 +110,22 @@ select is_empty(
 select results_eq(
   $$select id from public.task_comments where id::text like '66000000-%' order by id$$,
   array['66000000-0000-4000-8000-000000000003'::uuid], 'B sees only shared comments B');
+select is_empty(
+  $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
+  'B cannot read approvals issued by A');
+select results_eq(
+  $$insert into public.task_approvals(id,task_id,organization_id,client_id,actor_id,decision,message)
+    values ('77000000-0000-4000-8000-000000000004','44000000-0000-4000-8000-000000000003','22000000-0000-4000-8000-000000000001','33000000-0000-4000-8000-000000000002','11000000-0000-4000-8000-000000000002','changes_requested','Please revise copy') returning id$$,
+  array['77000000-0000-4000-8000-000000000004'::uuid], 'B can request changes on own visible task');
+select results_eq(
+  $$select stage::text from public.tasks where id='44000000-0000-4000-8000-000000000003'::uuid$$,
+  array['internal'::text], 'A revision moves its task to Internal review automatically');
+-- After both clients submit decisions, A can see only A records.
+set local request.jwt.claim.sub = '11000000-0000-4000-8000-000000000001';
 select results_eq(
   $$select id from public.task_approvals where id::text like '77000000-%' order by id$$,
-  array['77000000-0000-4000-8000-000000000002'::uuid], 'B sees only approvals B');
+  array['77000000-0000-4000-8000-000000000003'::uuid], 'A cannot read B client revision');
+
 
 -- AGENCY: internal notes remain available to an explicitly appointed owner.
 set local request.jwt.claim.sub = '11000000-0000-4000-8000-000000000003';

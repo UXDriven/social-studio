@@ -27,5 +27,5 @@ jobs:
           version: 2.84.2
       - name: Start fresh LOCAL database and apply migrations
         run: supabase db start
-      - name: Execute 22 pgTAP assertions under client A, client B, agency and anon
+      - name: Execute 26 pgTAP assertions under client A, client B, agency and anon
         run: supabase test db
