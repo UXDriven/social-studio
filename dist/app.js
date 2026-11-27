@@ -69,7 +69,7 @@
     view:(location.hash.slice(1) in views)?location.hash.slice(1):'overview',
     client:'all', week:0, month:0, period:'30d', calendarMode:'month', filter:'all',
     posts:window.UXDrivenLive?.enabled?[]:(restored.length?restored:seed), tasks:window.UXDrivenLive?.enabled?window.UXDrivenLive.tasks:(restoredTasks??taskSeed), taskView:'board', portalClient:'aurora',
-    generated:null, generatedTopic:'', generatedPlatform:'Instagram', generatedTone:'Estratégico', generatedClient:'aurora'
+    generated:null, generatedTopic:'', generatedPlatform:'Instagram', generatedTone:'Estratégico', generatedClient:'aurora', copilotThreads:{}, copilotBusy:false, copilotLast:null
   };
   const persist=()=>{if(!window.UXDrivenLive?.enabled)localStorage.setItem('uxdriven-social-demo-v1',JSON.stringify(state.posts));};
   const persistTasks=()=>{if(!window.UXDrivenLive?.enabled)localStorage.setItem('uxdriven-demandas-demo-v1',JSON.stringify(state.tasks));};
@@ -210,7 +210,38 @@
       <p class="demo-note" style="margin-top:16px">✳ O CALENDÁRIO É INTERATIVO E SALVA SUAS ALTERAÇÕES NESTE NAVEGADOR. NÃO PUBLICA NAS REDES SOCIAIS.</p>`;
   }
   function renderList(posts){return posts.length?posts.map(p=>`<div class="list-row">${clientThumb(p.client,true)}<div><strong>${escapeHTML(p.title)}</strong><small>${escapeHTML(clientOf(p.client).name)} · ${p.platform} · ${p.format}</small></div><time>${dateLabel(p.date)}</time>${badge(p.status)}<button class="action" data-post="${p.id}">Ver detalhes</button></div>`).join(''):noData('Nenhum conteúdo encontrado para este filtro.');}
+
+  function renderLiveStudio(){
+    const key=state.client;
+    const messages=state.copilotThreads[key]||[];
+    const client=key==='all'?'Todos os clientes':clientOf(key).name;
+    const starters=[
+      ['Analisar demandas','Analise as demandas e seus prazos. Liste riscos, prioridades e próximos passos sem inventar métricas.'],
+      ['Gerar estratégia','Proponha 5 demandas estratégicas com objetivos, briefing, formatos e motivos para este cliente.'],
+      ['Criar copy','Crie uma copy com headline forte, subheadline, desenvolvimento e CTA, adaptada ao contexto desta marca.'],
+      ['Relatório executivo','Gere um relatório executivo sobre demandas, etapas, ajustes solicitados e próximos passos, com base apenas nos dados disponíveis.']
+    ];
+    return `${header('UXDRIVEN COPILOT / LAB','Sua estratégia tem <em>um parceiro.</em>','Converse com os dados reais da operação. Estratégias, copies e briefings dependem da ativação do modelo de IA.',clientSelect())}
+      <div class="notice">${ICON('shield')}<div><strong>Workspaces isolados.</strong> Este assistente consulta demandas autorizadas no Supabase. Ele não cria, publica ou aprova tarefas automaticamente. A geração com modelo só funciona após ativação e controle de orçamento.</div></div>
+      <div class="copilot-layout">
+        <section class="panel panel-inner copilot-chat">
+          <div class="panel-head"><div><div class="panel-kicker">DADOS DO WORKSPACE / ${escapeHTML(client.toUpperCase())}</div><h2 class="panel-title">Conversa operacional</h2></div><span class="status-chip draft">LEITURA SEGURA</span></div>
+          <div class="copilot-messages" id="copilot-messages" aria-live="polite">
+          ${messages.length?messages.map(m=>`<div class="copilot-message ${m.role==='user'?'from-user':'from-assistant'}"><small>${m.role==='user'?'VOCÊ':m.mode==='ai'?'UXDRIVEN COPILOT · IA':'UXDRIVEN · CONSULTA DE DADOS'}</small><p>${escapeHTML(m.text)}</p></div>`).join(''):
+          `<div class="copilot-welcome"><div class="ai-symbol">${ICON('sparkles')}</div><h3>Como posso ajudar com ${escapeHTML(client)}?</h3><p>Consulte entregas, prazos e revisões ou prepare um briefing para a fase de geração estratégica por IA.</p></div>`}
+          ${state.copilotBusy?'<div class="copilot-message from-assistant"><small>CONSULTANDO</small><p>Buscando dados autorizados…</p></div>':''}
+          </div>
+          <form id="copilot-form" class="copilot-input-form"><label for="copilot-question">Sua pergunta ou orientação</label><textarea id="copilot-question" maxlength="1600" rows="3" required placeholder="Ex.: Quais demandas precisam da minha atenção hoje?"></textarea><div class="copilot-form-bottom"><small>As respostas são para apoio à decisão e exigem revisão humana.</small><button type="submit" class="btn btn-primary" ${state.copilotBusy?'disabled':''}>${ICON('sparkles')} Enviar</button></div></form>
+        </section>
+        <aside class="panel panel-inner copilot-side">
+          <div class="panel-kicker">ATALHOS / AGÊNCIA</div><h2 class="panel-title">Comece por aqui</h2>
+          <div class="copilot-starters">${starters.map((x,i)=>`<button class="copilot-starter" data-action="copilot-prompt" data-question="${escapeHTML(x[1])}"><span>0${i+1}</span><strong>${escapeHTML(x[0])}</strong>${ICON('arrow-up-right')}</button>`).join('')}</div>
+          <div class="copilot-safe-note"><strong>Transforme ideias em demandas</strong><p>Você poderá revisar o texto e decidir o que salvar. Nada é compartilhado sem sua confirmação.</p><button class="btn btn-small" data-action="copilot-to-task" ${messages.some(m=>m.role==='assistant'&&m.mode==='ai')?'':'disabled'}>Usar última resposta como briefing ↗</button></div>
+        </aside>
+      </div>`;
+  }
   function renderStudio(){
+    if(window.UXDrivenLive?.enabled)return renderLiveStudio();
     return `${header('INTELLIGENT CREATION / 03','Seu próximo <em>grande insight.</em>','Um laboratório para acelerar a primeira versão da sua ideia — com critério humano.',`<button class="btn btn-ghost" data-view="agents">${ICON('bot')} Explorar agentes</button>`)}
       <div class="notice">${ICON('info')}<div><strong>Modo demonstração.</strong> Esta etapa usa modelos locais de texto para simular a experiência do Studio IA. Nenhum prompt é enviado a modelos externos e os resultados não representam geração por API.</div></div>
       <div class="studio-layout"><section class="panel studio-form"><div class="panel-kicker">01 / CONFIGURE A CRIAÇÃO</div><h2 class="panel-title" style="margin:5px 0 24px;font-size:20px">De uma ideia ao primeiro rascunho.</h2>
@@ -269,7 +300,13 @@
       <aside class="panel approval-summary"><div class="panel-kicker">WORKFLOW / HUMAN-IN-THE-LOOP</div><h3>O controle continua com você.</h3><p>Da criação à publicação, cada etapa preserva a decisão humana e a identidade de cada marca.</p><div class="approval-steps"><div class="approval-step"><div class="step-number">01</div>Briefing & criação</div><div class="approval-step"><div class="step-number">02</div>Revisão interna</div><div class="approval-step"><div class="step-number">03</div>Aprovação do cliente</div><div class="approval-step"><div class="step-number">04</div>Agendamento seguro</div></div><div class="divider"></div><button class="btn btn-primary" data-view="calendar" style="width:100%">Abrir planejamento ${ICON('arrow-up-right')}</button></aside></div>
       ${ready.length?`<section class="panel panel-inner" style="margin-top:18px"><div class="panel-head"><div><div class="panel-kicker">PRÓXIMA ETAPA</div><h2 class="panel-title">Aprovados, prontos para agendar</h2></div><span class="status-chip approved">${ready.length} APROVADOS</span></div>${ready.map(p=>`<div class="list-row">${clientThumb(p.client,true)}<div><strong>${escapeHTML(p.title)}</strong><small>${escapeHTML(clientOf(p.client).name)} · ${p.platform}</small></div><time>${dateLabel(p.date)}</time>${badge(p.status)}<button class="action" data-action="schedule-post" data-id="${p.id}">Agendar</button></div>`).join('')}</section>`:''}`;
   }
+  function renderLiveReports(){
+    const days=parseInt(state.period,10)||30;
+    return `${header('OPERATIONS / REAL DATA','Sua operação. <em>Em números.</em>','Acompanhe entregas, prazos, revisões e carga de trabalho com dados reais do Supabase.',`${clientSelect()}<div class="select-wrap"><select id="period-select"><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option></select></div>`)}
+    ${window.UXDrivenLiveReports.report({tasks:visibleTasks(),clients,today,days})}`;
+  }
   function renderReports(){
+    if(window.UXDrivenLive?.enabled) return renderLiveReports();
     const values=state.period==='7d'?[42,58,50,70,75,68,91]:state.period==='90d'?[25,38,48,43,61,73,92]:[35,53,49,71,58,82,96];
     const labels=state.period==='7d'?['SEG','TER','QUA','QUI','SEX','SÁB','DOM']:state.period==='90d'?['SET 1','SET 2','SET 3','SET 4','SET 5','SET 6','SET 7']:['01-04','05-08','09-12','13-16','17-20','21-24','25-30'];
     return `${header('PERFORMANCE INTELLIGENCE / 06','O que importa, <em>em perspectiva.</em>','Transforme números em decisões melhores para o próximo ciclo.',`${clientSelect()}<div class="select-wrap"><select id="period-select"><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option></select></div>`)}
@@ -309,6 +346,7 @@
     const count=window.UXDrivenLive?.enabled?visibleTasks().filter(needsRevision).length:state.posts.filter(p=>['pending','review'].includes(p.status)).length;$('#approval-counter').textContent=count;
     $('#task-counter').textContent=state.tasks.filter(t=>t.stage!=='done').length;
     const selector=$('#client-select');if(selector)selector.value=state.client;
+    const period=$('#period-select');if(period)period.value=state.period;
     const portalSelect=$('#portal-client-select');if(portalSelect){if(window.UXDrivenLive?.enabled&&clients.length&&!clients.some(c=>c.id===state.portalClient))state.portalClient=clients[0].id;portalSelect.value=state.portalClient;}
     const aiClient=$('#ai-client');if(aiClient)aiClient.value=state.generatedClient;
     const aiPlat=$('#ai-platform');if(aiPlat)aiPlat.value=state.generatedPlatform;
@@ -399,6 +437,8 @@
     const clientRevise=e.target.closest('[data-client-revise]');if(clientRevise&&window.UXDrivenLive?.enabled){toast('Solicitação de ajustes disponível quando liberarmos o portal de clientes.');return;}if(clientRevise){clientRevisionModal(clientRevise.dataset.clientRevise);return;}
     const post=e.target.closest('[data-post]');if(post){state.view==='portal'?publicPostModal(post.dataset.post):postModal(post.dataset.post);return;}
     const creative=e.target.closest('[data-creative]');if(creative){creativeModal(creative.dataset.creative);return;}
+    const reportClient=e.target.closest('[data-report-client]');
+    if(reportClient){state.client=reportClient.dataset.reportClient;go('tasks');return;}
     const filter=e.target.closest('[data-filter]');if(filter){state.filter=filter.dataset.filter;render();return;}
     const agent=e.target.closest('[data-agent]');if(agent){state.generatedTopic=agents[Number(agent.dataset.agent)].topic;go('studio');toast('Briefing do agente carregado.');return;}
     const client=e.target.closest('[data-client-card]');if(client){state.client=client.dataset.clientCard;go('overview');toast('Workspace de '+clientOf(state.client).name+' selecionado.');return;}
@@ -410,6 +450,19 @@
     if(a==='close-modal'||a==='close-backdrop'){if(a==='close-backdrop'&&e.target!==action)return;closeModal();}
     if(a==='new-post')newPostModal();
     if(a==='new-task')newTaskModal(action.dataset.stage||'backlog');
+    if(a==='copilot-prompt'){
+      const area=$('#copilot-question');if(area){area.value=action.dataset.question||'';area.focus();}return;
+    }
+    if(a==='copilot-to-task'){
+      const messages=state.copilotThreads[state.client]||[];
+      const answer=[...messages].reverse().find(m=>m.role==='assistant'&&m.mode==='ai');
+      if(!answer){toast('Gere uma resposta de IA antes de criar o briefing.');return;}
+      newTaskModal('backlog');
+      const note=$('#task-internal');if(note)note.value=answer.text.slice(0,3800);
+      const title=$('#task-title');if(title)title.value='Briefing estratégico — revisar';
+      toast('Briefing pré-preenchido. Revise os campos e salve a demanda quando estiver pronto.');
+      return;
+    }
     if(a==='new-task-for-date'){newTaskModal('backlog',action.dataset.date);return;}
     if(a==='prev-month'){state.month--;render();}
     if(a==='next-month'){state.month++;render();}
@@ -441,6 +494,23 @@
   document.addEventListener('input',e=>{if(e.target.id==='ai-topic')state.generatedTopic=e.target.value;});
   document.addEventListener('submit',e=>{
     if(e.target.id==='new-client-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const name=String(data.name||'').trim();if(name.length<2)return;window.UXDrivenLive.createClient({name,category:String(data.category||'').trim()}).then(client=>{clients.push(client);state.client=client.id;state.portalClient=client.id;closeModal();render();toast('Cliente salvo no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}
+    if(e.target.id==='copilot-form'){
+      e.preventDefault();
+      if(state.copilotBusy||!window.UXDrivenLive?.enabled)return;
+      const area=e.target.querySelector('#copilot-question');
+      const message=(area?.value||'').trim();
+      if(!message||message.length>1600)return;
+      const key=state.client;
+      const messages=(state.copilotThreads[key]||[]).slice();
+      messages.push({role:'user',text:message});
+      state.copilotThreads[key]=messages.slice(-14);
+      state.copilotBusy=true;render();
+      window.UXDrivenLive.askAssistant({message,clientId:key==='all'?null:key})
+        .then(result=>{state.copilotThreads[key].push({role:'assistant',text:result.reply,mode:result.mode});state.copilotThreads[key]=state.copilotThreads[key].slice(-14);})
+        .catch(error=>{state.copilotThreads[key].push({role:'assistant',text:error.message||'Falha de conexão.',mode:'error'});})
+        .finally(()=>{state.copilotBusy=false;if(state.view==='studio'&&state.client===key){render();const box=$('#copilot-messages');if(box)box.scrollTop=box.scrollHeight;}});
+      return;
+    }
     if(e.target.id==='new-task-form'){e.preventDefault();const data=Object.fromEntries(new FormData(e.target));if(!data.title?.trim()||!data.publicSummary?.trim())return;const t={id:'t'+Date.now(),client:data.client,title:data.title.trim(),type:data.type,stage:data.stage,priority:data.priority,assignee:data.assignee,due:data.due,publicSummary:data.publicSummary.trim(),internalNote:data.internalNote||'',comments:[]};if(window.UXDrivenLive?.enabled){window.UXDrivenLive.createTask(t).then(saved=>{state.tasks.push(saved);closeModal();render();toast(saved.clientVisible?'Demanda criada e compartilhada com o cliente.':'Demanda salva no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}state.tasks.push(t);persistTasks();closeModal();render();toast('Demanda criada no Kanban (demo).');}
     if(e.target.id==='edit-task-form'){e.preventDefault();const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));if(window.UXDrivenLive?.enabled){window.UXDrivenLive.updateTask({id:t.id,stage:data.stage,due:data.due,publicSummary:data.publicSummary,internalNote:data.internalNote,clientVisible:data.stage==='client'||data.clientVisible==='on'}).then(saved=>{t.stage=saved.stage;t.due=data.due;t.publicSummary=data.publicSummary;t.internalNote=data.internalNote;t.clientVisible=saved.client_visible;closeModal();render();toast(saved.client_visible&&saved.stage==='client'?'Demanda disponível no Portal do Cliente.':'Demanda atualizada no Supabase.');}).catch(err=>toast('Erro: '+err.message));return;}t.stage=data.stage;t.due=data.due;t.publicSummary=data.publicSummary;t.internalNote=data.internalNote;persistTasks();closeModal();render();toast('Demanda atualizada (demo).');}
     if(e.target.id==='client-comment-form'){e.preventDefault();if(window.UXDrivenLive?.enabled){toast('Comentários do portal ainda não foram ativados.');return;}const t=state.tasks.find(x=>x.id===e.target.dataset.id);if(!t)return;const data=Object.fromEntries(new FormData(e.target));if(!data.comment?.trim())return;t.comments=(t.comments||[]).concat([{author:'Cliente (demo)',text:data.comment.trim()}]);persistTasks();closeModal();render();toast('Comentário registrado na simulação.');}

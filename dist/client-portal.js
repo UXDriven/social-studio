@@ -15,6 +15,8 @@
     let openTaskId = null;
     let busy = false;
     let error = '';
+    const assistantThreads = {};
+    let assistantBusy = false;
 
     // Keep the locked agency shell hidden. Only the client-facing root is rendered.
     document.body.classList.add('locked','client-session');
@@ -53,6 +55,32 @@
         <h3>${esc(task.title)}</h3><p>${esc(task.public_summary || 'A equipe está preparando uma atualização para você.')}</p>
         <div class="cp-task-bottom"><span>PREVISÃO <strong>${date(task.due_date)}</strong></span><button type="button" class="cp-inline" data-task-open="${esc(task.id)}">Acompanhar demanda <span aria-hidden="true">↗</span></button></div></article>`;
     }
+
+    function assistantPanel(){
+      const messages=assistantThreads[selectedId]||[];
+      const clientName=currentClient()?.name||'seu workspace';
+      const prompts=[
+        'Quais demandas estão em andamento?',
+        'Quais são os prazos previstos?',
+        'Quais ajustes já foram solicitados?',
+        'Sugira ideias para uma próxima campanha.'
+      ];
+      return `<section class="cp-assistant" aria-label="Assistente do seu workspace">
+        <div class="cp-assistant-head"><span class="cp-aside-kicker">${icon} ASSISTENTE DO CLIENTE</span><h2>Seu projeto.<br><em>Suas respostas.</em></h2>
+          <p>Consulte demandas e prazos do ${esc(clientName)}. Ideias criativas serão habilitadas quando a IA estiver ativa.</p></div>
+        <div class="cp-assistant-prompts">${prompts.map(q=>`<button type="button" data-assistant-question="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+        <div class="cp-assistant-conversation" id="cp-assistant-conversation" role="log" aria-live="polite">
+          ${messages.length?messages.map(m=>`<div class="cp-assistant-message ${m.role==='user'?'mine':'reply'}"><small>${m.role==='user'?'VOCÊ':m.mode==='ai'?'ASSISTENTE COM IA':'ASSISTENTE · DADOS VERIFICADOS'}</small><p>${esc(m.text)}</p></div>`).join(''):
+            '<div class="cp-assistant-empty">Pergunte sobre o andamento do seu projeto. As respostas consultam apenas as informações compartilhadas pela UXDriven.</div>'}
+          ${assistantBusy?'<div class="cp-assistant-empty">Consultando seus dados…</div>':''}
+        </div>
+        <form id="cp-assistant-form" class="cp-assistant-form"><label for="cp-assistant-input">SUA MENSAGEM</label>
+          <textarea id="cp-assistant-input" name="question" required maxlength="1600" placeholder="Como está a entrega do meu site?"></textarea>
+          <button class="cp-btn cp-btn-primary" type="submit" ${assistantBusy?'disabled':''}>Perguntar ao assistente ↗</button>
+        </form>
+        <small class="cp-assistant-disclaimer">Este assistente não modifica demandas nem acessa notas internas. Sugestões não são solicitações registradas.</small>
+      </section>`;
+    }
     function render() {
       const client = currentClient();
       const tasks = currentTasks();
@@ -71,7 +99,7 @@
           <section class="cp-section cp-projects"><div class="cp-section-head"><div><small>02 / PROJETOS</small><h2>Frentes <em>ativas.</em></h2></div><span class="cp-section-count">${projects.length} PROJETOS</span></div><div class="cp-project-list">${projects.length ? projects.map(p => `<div class="cp-project"><span class="cp-project-icon">${icon}</span><div><strong>${esc(p.name)}</strong><p>${esc(p.description || 'Projeto acompanhado pela UXDriven.')}</p></div><span class="cp-project-badge">ATIVO</span></div>`).join('') : '<div class="cp-empty">Projetos detalhados serão disponibilizados aqui pela equipe UXDriven.</div>'}</div></section></div>
           <aside class="cp-aside"><div class="cp-review-panel"><span class="cp-aside-kicker">${icon} SUA PARTICIPAÇÃO</span><h2>Sua visão faz<br><em>a diferença.</em></h2><p>As entregas abaixo estão aguardando sua decisão.</p>
             ${pendingTasks.length ? pendingTasks.map(t => `<div class="cp-review-item"><strong>${esc(t.title)}</strong><span>${date(t.due_date)}</span><button type="button" class="cp-btn cp-btn-primary" data-task-open="${esc(t.id)}">Revisar entrega <span aria-hidden="true">↗</span></button></div>`).join('') : '<div class="cp-clear">✓ Nenhuma aprovação pendente no momento.</div>'}
-          </div><div class="cp-help"><span>UMA EXPERIÊNCIA MAIS PRÓXIMA.</span><h3>Estamos juntos<br>em cada etapa.</h3><p>Este espaço reúne o acompanhamento e as decisões que fazem parte da sua entrega.</p><a href="https://uxdriven-lab.vercel.app/" target="_blank" rel="noopener noreferrer">Conheça a UXDriven ↗</a></div></aside></div>
+          </div>${assistantPanel()}<div class="cp-help"><span>UMA EXPERIÊNCIA MAIS PRÓXIMA.</span><h3>Estamos juntos<br>em cada etapa.</h3><p>Este espaço reúne o acompanhamento e as decisões que fazem parte da sua entrega.</p><a href="https://uxdriven-lab.vercel.app/" target="_blank" rel="noopener noreferrer">Conheça a UXDriven ↗</a></div></aside></div>
         <footer class="cp-footer"><span>UXDRIVEN® SOCIAL STUDIO</span><span>DESIGNED AROUND THE USER ${icon}</span></footer>
       </main><div id="cp-modal-root"></div></div>`;
       document.title = `${client?.name || 'Portal do Cliente'} — UXDriven Social Studio`;
@@ -112,6 +140,8 @@
 
     root.addEventListener('click', async event => {
       if (event.target.closest('#cp-logout')) { await signOut(); return; }
+      const suggestion=event.target.closest('[data-assistant-question]');
+      if(suggestion){const input=root.querySelector('#cp-assistant-input');if(input){input.value=suggestion.dataset.assistantQuestion||'';input.focus();}return;}
       const dismiss = event.target.closest('[data-dismiss]');
       if (dismiss && (event.target === dismiss || dismiss.classList.contains('cp-dialog-close'))) { closeModal(); return; }
       const open = event.target.closest('[data-task-open]');
@@ -133,6 +163,37 @@
     });
     root.addEventListener('submit', async event => {
       const form = event.target;
+      if(form.id==='cp-assistant-form'){
+        event.preventDefault();
+        if(assistantBusy)return;
+        const question=String(new FormData(form).get('question')||'').trim();
+        if(!question||question.length>1600)return;
+        const scopeId=selectedId;
+        const messages=(assistantThreads[scopeId]||[]).slice();
+        messages.push({role:'user',text:question});
+        assistantThreads[scopeId]=messages.slice(-12);
+        assistantBusy=true;render();
+        try{
+          const auth=await db.auth.getSession();
+          const token=auth.data?.session?.access_token;
+          if(!token)throw new Error('Sua sessão expirou. Entre novamente.');
+          const response=await fetch('/api/assistant',{
+            method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({message:question,clientId:scopeId})
+          });
+          const result=await response.json().catch(()=>({}));
+          if(!response.ok)throw new Error(result.reply||'O assistente está indisponível neste momento.');
+          assistantThreads[scopeId].push({role:'assistant',mode:result.mode,text:result.reply});
+          assistantThreads[scopeId]=assistantThreads[scopeId].slice(-12);
+        }catch(err){
+          assistantThreads[scopeId].push({role:'assistant',mode:'error',text:err.message||'Falha de conexão.'});
+        }finally{
+          assistantBusy=false;render();
+          const box=root.querySelector('#cp-assistant-conversation');
+          if(box)box.scrollTop=box.scrollHeight;
+        }
+        return;
+      }
       if (!['cp-comment-form','cp-decision-form'].includes(form.id)) return;
       event.preventDefault();
       if (busy) return;
