@@ -22,5 +22,7 @@ jobs:
           node --check dist/auth-recovery.js
           node --check dist/client-portal.js
           node --check api/public-config.js
+          node --check api/assistant.js
+          node --check dist/live-reports.js
       - name: Test client isolation at UI boundary
-        run: node --test tests/client-portal.test.cjs tests/password-recovery.test.cjs tests/client-stage-share.test.cjs tests/live-calendar.test.cjs
+        run: node --test tests/client-portal.test.cjs tests/password-recovery.test.cjs tests/client-stage-share.test.cjs tests/live-calendar.test.cjs tests/live-reports.test.cjs tests/assistant.test.cjs
