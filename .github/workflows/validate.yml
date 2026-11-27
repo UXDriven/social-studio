@@ -22,4 +22,4 @@ jobs:
           node --check dist/client-portal.js
           node --check api/public-config.js
       - name: Test client isolation at UI boundary
-        run: node --test tests/client-portal.test.cjs tests/password-recovery.test.cjs
+        run: node --test tests/client-portal.test.cjs tests/password-recovery.test.cjs tests/client-stage-share.test.cjs
