@@ -70,32 +70,6 @@
         </div>
       </section>`;
     }
-    function unusedAssistantPanel(){
-
-      const messages=assistantThreads[selectedId]||[];
-      const clientName=currentClient()?.name||'seu workspace';
-      const prompts=[
-        'Quais demandas estão em andamento?',
-        'Quais são os prazos previstos?',
-        'Quais ajustes já foram solicitados?',
-        'Sugira ideias para uma próxima campanha.'
-      ];
-      return `<section class="cp-assistant" aria-label="Assistente do seu workspace">
-        <div class="cp-assistant-head"><span class="cp-aside-kicker">${icon} ASSISTENTE DO CLIENTE</span><h2>Seu projeto.<br><em>Suas respostas.</em></h2>
-          <p>Consulte demandas e prazos do ${esc(clientName)}. Ideias criativas serão habilitadas quando a IA estiver ativa.</p></div>
-        <div class="cp-assistant-prompts">${prompts.map(q=>`<button type="button" data-assistant-question="${esc(q)}">${esc(q)}</button>`).join('')}</div>
-        <div class="cp-assistant-conversation" id="cp-assistant-conversation" role="log" aria-live="polite">
-          ${messages.length?messages.map(m=>`<div class="cp-assistant-message ${m.role==='user'?'mine':'reply'}"><small>${m.role==='user'?'VOCÊ':m.mode==='ai'?'ASSISTENTE COM IA':'ASSISTENTE · DADOS VERIFICADOS'}</small><p>${esc(m.text)}</p></div>`).join(''):
-            '<div class="cp-assistant-empty">Pergunte sobre o andamento do seu projeto. As respostas consultam apenas as informações compartilhadas pela UXDriven.</div>'}
-          ${assistantBusy?'<div class="cp-assistant-empty">Consultando seus dados…</div>':''}
-        </div>
-        <form id="cp-assistant-form" class="cp-assistant-form"><label for="cp-assistant-input">SUA MENSAGEM</label>
-          <textarea id="cp-assistant-input" name="question" required maxlength="1600" placeholder="Como está a entrega do meu site?"></textarea>
-          <button class="cp-btn cp-btn-primary" type="submit" ${assistantBusy?'disabled':''}>Perguntar ao assistente ↗</button>
-        </form>
-        <small class="cp-assistant-disclaimer">Este assistente não modifica demandas nem acessa notas internas. Sugestões não são solicitações registradas.</small>
-      </section>`;
-    }
     function render() {
       const client = currentClient();
       const tasks = currentTasks();
