@@ -134,7 +134,7 @@
           return makeClient(r.data,this.clients.length);
         },
         async createTask(input){
-          const r=await db.from("tasks").insert({organization_id:organization.id,client_id:input.client,title:input.title,task_type:input.type,stage:input.stage,priority:input.priority,due_date:input.due,public_summary:input.publicSummary,client_visible:false}).select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible").single();
+          const r=await db.from("tasks").insert({organization_id:organization.id,client_id:input.client,title:input.title,task_type:input.type,stage:input.stage,priority:input.priority,due_date:input.due,public_summary:input.publicSummary,client_visible:input.stage==="client"}).select("id,client_id,title,task_type,stage,priority,due_date,public_summary,client_visible").single();
           if(r.error)throw r.error;
           if(input.internalNote?.trim()){
             const note=await db.from("task_internal_notes").insert({task_id:r.data.id,organization_id:organization.id,body:input.internalNote});
@@ -143,14 +143,21 @@
           return makeTask(r.data,input.internalNote);
         },
         async updateTask(input){
-          const r=await db.from("tasks").update({stage:input.stage,due_date:input.due,public_summary:input.publicSummary,client_visible:input.clientVisible===true}).eq("id",input.id).eq("organization_id",organization.id);
+          // Moving to "Com cliente" is an explicit publication action.
+          // Keep earlier shared items visible if the stage later changes.
+          const clientVisible=input.stage==="client" || input.clientVisible===true;
+          const r=await db.from("tasks").update({stage:input.stage,due_date:input.due,public_summary:input.publicSummary,client_visible:clientVisible}).eq("id",input.id).eq("organization_id",organization.id).select("stage,client_visible").single();
           if(r.error)throw r.error;
           const n=await db.from("task_internal_notes").upsert({task_id:input.id,organization_id:organization.id,body:input.internalNote||""},{onConflict:"task_id"});
           if(n.error)throw new Error("Etapa atualizada; nota interna não salva: "+n.error.message);
+          return r.data;
         },
         async moveTask(id,stage){
-          const r=await db.from("tasks").update({stage}).eq("id",id).eq("organization_id",organization.id);
+          // A single atomic update prevents "Com cliente" without portal visibility.
+          const payload=stage==="client" ? {stage,client_visible:true} : {stage};
+          const r=await db.from("tasks").update(payload).eq("id",id).eq("organization_id",organization.id).select("stage,client_visible").single();
           if(r.error)throw r.error;
+          return r.data;
         }
       };
       window.UXDrivenLive=live;
