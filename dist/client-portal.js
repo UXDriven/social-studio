@@ -57,6 +57,21 @@
     }
 
     function assistantPanel(){
+      return `<section class="cp-assistant cp-assistant-coming" aria-label="Assistente do cliente em desenvolvimento">
+        <div class="cp-assistant-head">
+          <span class="cp-aside-kicker">${icon} UXDRIVEN / FUTURE EXPERIENCE</span>
+          <h2>Assistente do cliente.<br><em>Em desenvolvimento.</em></h2>
+          <p>Estamos preparando um espaço para consultar projetos, esclarecer dúvidas e sugerir novas demandas com inteligência artificial.</p>
+        </div>
+        <div class="cp-assistant-coming-body">
+          <span class="cp-assistant-coming-tag">EM DESENVOLVIMENTO</span>
+          <p>Essa funcionalidade ainda não está disponível. Enquanto isso, você pode acompanhar as demandas e conversar diretamente com a equipe pelo histórico de mensagens de cada entrega.</p>
+          <small>NENHUMA CHAMADA DE IA OU COBRANÇA POR GERAÇÃO</small>
+        </div>
+      </section>`;
+    }
+    function unusedAssistantPanel(){
+
       const messages=assistantThreads[selectedId]||[];
       const clientName=currentClient()?.name||'seu workspace';
       const prompts=[
