@@ -269,7 +269,13 @@
       <aside class="panel approval-summary"><div class="panel-kicker">WORKFLOW / HUMAN-IN-THE-LOOP</div><h3>O controle continua com você.</h3><p>Da criação à publicação, cada etapa preserva a decisão humana e a identidade de cada marca.</p><div class="approval-steps"><div class="approval-step"><div class="step-number">01</div>Briefing & criação</div><div class="approval-step"><div class="step-number">02</div>Revisão interna</div><div class="approval-step"><div class="step-number">03</div>Aprovação do cliente</div><div class="approval-step"><div class="step-number">04</div>Agendamento seguro</div></div><div class="divider"></div><button class="btn btn-primary" data-view="calendar" style="width:100%">Abrir planejamento ${ICON('arrow-up-right')}</button></aside></div>
       ${ready.length?`<section class="panel panel-inner" style="margin-top:18px"><div class="panel-head"><div><div class="panel-kicker">PRÓXIMA ETAPA</div><h2 class="panel-title">Aprovados, prontos para agendar</h2></div><span class="status-chip approved">${ready.length} APROVADOS</span></div>${ready.map(p=>`<div class="list-row">${clientThumb(p.client,true)}<div><strong>${escapeHTML(p.title)}</strong><small>${escapeHTML(clientOf(p.client).name)} · ${p.platform}</small></div><time>${dateLabel(p.date)}</time>${badge(p.status)}<button class="action" data-action="schedule-post" data-id="${p.id}">Agendar</button></div>`).join('')}</section>`:''}`;
   }
+  function renderLiveReports(){
+    const days=parseInt(state.period,10)||30;
+    return `${header('OPERATIONS / REAL DATA','Sua operação. <em>Em números.</em>','Acompanhe entregas, prazos, revisões e carga de trabalho com dados reais do Supabase.',`${clientSelect()}<div class="select-wrap"><select id="period-select"><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option></select></div>`)}
+    ${window.UXDrivenLiveReports.report({tasks:visibleTasks(),clients,today,days})}`;
+  }
   function renderReports(){
+    if(window.UXDrivenLive?.enabled) return renderLiveReports();
     const values=state.period==='7d'?[42,58,50,70,75,68,91]:state.period==='90d'?[25,38,48,43,61,73,92]:[35,53,49,71,58,82,96];
     const labels=state.period==='7d'?['SEG','TER','QUA','QUI','SEX','SÁB','DOM']:state.period==='90d'?['SET 1','SET 2','SET 3','SET 4','SET 5','SET 6','SET 7']:['01-04','05-08','09-12','13-16','17-20','21-24','25-30'];
     return `${header('PERFORMANCE INTELLIGENCE / 06','O que importa, <em>em perspectiva.</em>','Transforme números em decisões melhores para o próximo ciclo.',`${clientSelect()}<div class="select-wrap"><select id="period-select"><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option></select></div>`)}
@@ -309,6 +315,7 @@
     const count=window.UXDrivenLive?.enabled?visibleTasks().filter(needsRevision).length:state.posts.filter(p=>['pending','review'].includes(p.status)).length;$('#approval-counter').textContent=count;
     $('#task-counter').textContent=state.tasks.filter(t=>t.stage!=='done').length;
     const selector=$('#client-select');if(selector)selector.value=state.client;
+    const period=$('#period-select');if(period)period.value=state.period;
     const portalSelect=$('#portal-client-select');if(portalSelect){if(window.UXDrivenLive?.enabled&&clients.length&&!clients.some(c=>c.id===state.portalClient))state.portalClient=clients[0].id;portalSelect.value=state.portalClient;}
     const aiClient=$('#ai-client');if(aiClient)aiClient.value=state.generatedClient;
     const aiPlat=$('#ai-platform');if(aiPlat)aiPlat.value=state.generatedPlatform;
@@ -399,6 +406,8 @@
     const clientRevise=e.target.closest('[data-client-revise]');if(clientRevise&&window.UXDrivenLive?.enabled){toast('Solicitação de ajustes disponível quando liberarmos o portal de clientes.');return;}if(clientRevise){clientRevisionModal(clientRevise.dataset.clientRevise);return;}
     const post=e.target.closest('[data-post]');if(post){state.view==='portal'?publicPostModal(post.dataset.post):postModal(post.dataset.post);return;}
     const creative=e.target.closest('[data-creative]');if(creative){creativeModal(creative.dataset.creative);return;}
+    const reportClient=e.target.closest('[data-report-client]');
+    if(reportClient){state.client=reportClient.dataset.reportClient;go('tasks');return;}
     const filter=e.target.closest('[data-filter]');if(filter){state.filter=filter.dataset.filter;render();return;}
     const agent=e.target.closest('[data-agent]');if(agent){state.generatedTopic=agents[Number(agent.dataset.agent)].topic;go('studio');toast('Briefing do agente carregado.');return;}
     const client=e.target.closest('[data-client-card]');if(client){state.client=client.dataset.clientCard;go('overview');toast('Workspace de '+clientOf(state.client).name+' selecionado.');return;}
