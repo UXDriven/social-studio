@@ -36,14 +36,15 @@ que esse endpoint retorne.
 
 ## 3. Configuração do Supabase Auth
 
-O domínio de validação associado à branch `feat/auth-live-supabase` é:
-`https://login-uxdsocialstudio.vercel.app` (Preview). Antes de usá-lo em recuperação de senha, confirme que abre o deployment correto. Ao promover a aplicação para produção, remova a associação de Preview e configure o domínio para `main` / Production, junto com as variáveis de produção.
+**Domínio oficial:** `https://studio-uxdriven.vercel.app/`.
 
 Em **Authentication → URL Configuration**:
-- Site URL: `https://social-studio-sage.vercel.app`.
-- Adicionar `https://login-uxdsocialstudio.vercel.app/**` aos Redirect URLs permitidos para fluxos futuros de e-mail e recuperação de senha; mantenha Site URL de produção conforme a estratégia de publicação.
-- Não utilizar dados reais de clientes no ambiente Preview.
-- Para login com e-mail/senha pré-criado no dashboard não há OAuth a configurar.
+- Site URL: `https://studio-uxdriven.vercel.app/`.
+- Adicione a Redirect URL exata `https://studio-uxdriven.vercel.app/?auth=recovery` para recuperar senhas.
+
+Para recuperar senhas de usuários que não são membros da equipe Supabase, **configure SMTP próprio** em **Authentication → SMTP Settings**. O servidor embutido do Supabase limita o envio a e-mails autorizados da equipe, e não é recomendado para usuários finais.
+
+Ver detalhes, testes e limitações em [PASSWORD_RECOVERY.md](PASSWORD_RECOVERY.md).
 
 ## 4. Primeiro teste controlado
 1. Não faça merge do PR antes de verificar o status do CI.

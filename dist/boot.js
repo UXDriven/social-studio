@@ -169,8 +169,10 @@
         <form class="auth-form" id="auth-form">
           <label for="auth-email">E-mail</label><input id="auth-email" type="email" name="email" autocomplete="username" required placeholder="seu@email.com">
           <label for="auth-password">Senha</label><input id="auth-password" type="password" name="password" autocomplete="current-password" required placeholder="Sua senha">
+          <div class="auth-forgot-row"><button type="button" class="auth-text-action" id="forgot-password">Esqueci minha senha</button></div>
           <button class="auth-submit" type="submit">Acessar Social Studio →</button>
         </form>`);
+      document.getElementById("forgot-password").onclick=()=>recovery.showRequest(document.getElementById("auth-email").value);
       document.getElementById("auth-form").onsubmit=async e=>{
         e.preventDefault();
         const button=e.currentTarget.querySelector("button");button.disabled=true;button.textContent="Autenticando...";
@@ -180,8 +182,11 @@
         try{await openWorkspace(r.data.user);}catch(err){showLogin(err.message);}
       };
     }
+    const recovery=window.UXDrivenPasswordRecovery?.init({db,screen,esc,showLogin});
+    if(!recovery)throw new Error("Módulo de recuperação de acesso indisponível.");
     const session=await db.auth.getUser();
-    if(session.data.user&&!session.error)await openWorkspace(session.data.user);
+    if(recovery.isRecoveryReturn())recovery.handleReturn(Boolean(session.data.user&&!session.error));
+    else if(session.data.user&&!session.error)await openWorkspace(session.data.user);
     else showLogin();
   } catch(error) {
     screen("ERRO DE CONEXÃO","Não conseguimos <em>entrar.</em>",
