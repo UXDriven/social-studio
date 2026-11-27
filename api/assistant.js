@@ -123,7 +123,10 @@ export default async function handler(req,res){
     if(scope.error)return respond(res,scope.error==='invalid_token'?401:403,{error:scope.error});
     const model=process.env.AI_GATEWAY_MODEL;
     const gatewayKey=process.env.AI_GATEWAY_API_KEY||req.headers['x-vercel-oidc-token']||process.env.VERCEL_OIDC_TOKEN;
-    const enabled=process.env.AI_ASSISTANTS_ENABLED==='true'&&Boolean(model&&gatewayKey);
+    // The agency may opt in to a paid model separately from all client accounts.
+    // Client-side model access remains off until budget, rate limits and policies are reviewed.
+    const modelAllowedForRole=scope.role==='agency' || process.env.AI_CLIENT_ASSISTANT_ENABLED==='true';
+    const enabled=process.env.AI_ASSISTANTS_ENABLED==='true'&&modelAllowedForRole&&Boolean(model&&gatewayKey);
     if(enabled){
       try{
         const reply=await fromGateway(message,scope,gatewayKey,model);

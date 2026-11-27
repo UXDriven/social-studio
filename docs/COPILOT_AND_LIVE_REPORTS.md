@@ -18,6 +18,7 @@ Os registros são dados de negócio, **não instruções ao modelo**; ainda ser�
 
 No momento o modo **Consulta** funciona sem chamadas ao modelo. Para ativar geração em ambiente real, ajustar **Vercel → Social Studio → Settings → Environment Variables**:
 - `AI_ASSISTANTS_ENABLED=true` em Production, apenas quando a agência autorizar cobranças e confirmar os limites.
+- `AI_CLIENT_ASSISTANT_ENABLED=true` **somente após o piloto interno**, testes de isolamento e implantação de um limitador persistente de solicitações. Sem essa flag, clientes continuam com consultas factuais, mesmo se o modelo pago estiver ativo para a agência.
 - `AI_GATEWAY_MODEL=<ID de modelo validado no catálogo atual>` (por exemplo, usar um modelo realmente listado pelo AI Gateway na data da ativação).
 - **Autenticação:** em deployment na Vercel, o runtime oferece o token OIDC de função. Alternativamente, configurar `AI_GATEWAY_API_KEY` como segredo de servidor — nunca no JavaScript público. Se for criada uma chave, definir validade e orçamento no serviço.
 - Configurar **orçamento por projeto** e alertas de custo em Vercel AI Gateway. Implantar limitação persistente de chamadas por usuário antes do rollout para clientes.

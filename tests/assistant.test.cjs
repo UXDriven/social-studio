@@ -92,3 +92,8 @@ test('unsupported creative generation does not claim to have run a model',async(
   assert.match(s,/habilitar o modelo/);
   assert.doesNotMatch(s,/Aqui está sua campanha/);
 });
+
+test('paid model generation for clients requires a separate explicit rollout flag',()=>{
+  assert.match(src,/scope\.role==='agency' \|\| process\.env\.AI_CLIENT_ASSISTANT_ENABLED==='true'/);
+  assert.match(src,/process\.env\.AI_ASSISTANTS_ENABLED==='true'&&modelAllowedForRole/);
+});
