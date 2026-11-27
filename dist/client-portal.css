@@ -39,3 +39,24 @@ body.client-session .app-shell,body.client-session #toast-root,body.client-sessi
 @media(max-width:1000px){.cp-content{grid-template-columns:1fr}.cp-aside{grid-template-columns:1fr 1fr}.cp-hero{grid-template-columns:1fr .75fr}.cp-art-core{transform:scale(.84) rotate(-8deg)}}
 @media(max-width:690px){.cp-header-inner{height:70px;padding:0 5%}.cp-brand small,.cp-live{display:none}.cp-container{padding-top:32px}.cp-hero{grid-template-columns:1fr}.cp-hero-text{padding:34px 28px}.cp-hero h1{font-size:46px}.cp-hero-art{min-height:175px;max-height:175px}.cp-art-core{width:200px;height:190px;padding:20px;transform:scale(.66) rotate(-8deg);margin-top:-48px}.cp-art-core strong{font-size:36px}.cp-orbit{width:280px;height:280px}.cp-orbit-two{width:200px;height:200px}.cp-art-float{bottom:15px;right:7%}.cp-metrics{gap:8px}.cp-metrics>div{padding:16px 11px}.cp-metrics small{font-size:8px;line-height:1.5}.cp-metrics strong{font-size:35px}.cp-metrics span{font-size:10px;line-height:1.4}.cp-aside{grid-template-columns:1fr}.cp-dialog{padding:26px 18px}.cp-section-head{align-items:flex-start}.cp-footer{flex-direction:column}.cp-task{padding:18px 16px}.cp-task-top{align-items:start}}
 @media(prefers-reduced-motion:reduce){.cp-page,.cp-dialog,.cp-orbit,.cp-art-core{animation:none!important}.cp-page *{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Client assistant — scoped read-only workspace support */
+.cp-assistant{border:1px solid #344f2d;border-radius:16px;background:linear-gradient(145deg,#192319,#0e150f);padding:24px 21px;display:grid;gap:15px}
+.cp-assistant-head h2{font-size:25px;line-height:1.15;letter-spacing:-.04em;margin:12px 0}.cp-assistant-head h2 em{color:#d2fa63;font-style:normal}
+.cp-assistant-head p{color:#9aaf94;font-size:12px;line-height:1.7;margin:0}
+.cp-assistant-prompts{display:grid;gap:7px}
+.cp-assistant-prompts button{font:11px/1.45 inherit;background:#202d1e;border:1px solid #3a4d32;border-radius:9px;color:#d5e9ca;cursor:pointer;text-align:left;padding:10px 12px}
+.cp-assistant-prompts button:hover,.cp-assistant-prompts button:focus-visible{border-color:#b7e959;outline:none;background:#2a3a22}
+.cp-assistant-conversation{max-height:310px;min-height:100px;overflow-y:auto;display:grid;align-content:start;gap:10px}
+.cp-assistant-empty{font-size:11px;line-height:1.7;color:#899b83;border:1px dashed #384537;border-radius:10px;padding:16px}
+.cp-assistant-message{font-size:12px;line-height:1.65;border-radius:10px;padding:13px 14px;white-space:pre-wrap;overflow-wrap:anywhere;background:#202b20;border:1px solid #344631}
+.cp-assistant-message.mine{margin-left:17px;background:#2c3d26;border-color:#526a3b}
+.cp-assistant-message small{display:block;font:9px monospace;letter-spacing:.04em;color:#c6ddad;margin-bottom:6px}
+.cp-assistant-message p{margin:0;white-space:pre-wrap}
+.cp-assistant-form{display:grid;gap:9px}
+.cp-assistant-form label{font:9px monospace;letter-spacing:.06em;color:#b6cfa6}
+.cp-assistant-form textarea{width:100%;min-height:76px;resize:vertical;border-radius:9px;padding:12px;background:#0b120c;border:1px solid #45583a;color:#eef7e9;font:12px/1.6 inherit;box-sizing:border-box}
+.cp-assistant-form textarea:focus-visible{outline:2px solid #d6fc65;outline-offset:2px}
+.cp-assistant-form .cp-btn{justify-content:center}
+.cp-assistant-disclaimer{font-size:10px;line-height:1.7;color:#81927c}
