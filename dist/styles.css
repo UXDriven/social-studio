@@ -524,3 +524,32 @@ body.locked .app-shell{display:none}
   .auth-editorial h2{font-size:29px}
 }
 @media(prefers-reduced-motion:reduce){.auth-pulse,.auth-floating-pill{animation:none}}
+
+
+/* Live Supabase task calendar — distinct from demo editorial posts */
+.live-calendar-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 22px}
+.live-calendar-stat{background:#151f16;border:1px solid #2c3c2b;border-radius:13px;padding:19px 20px;display:flex;flex-direction:column;gap:11px}
+.live-calendar-stat span{font:500 10px var(--mono);letter-spacing:.07em;color:#a6b6a2;text-transform:uppercase}
+.live-calendar-stat strong{font:600 31px/1 var(--display);color:#eef4e9}
+.live-calendar-stat.warning{border-color:#a16b3c;background:#271e16}.live-calendar-stat.warning strong{color:#ffbe84}
+.live-calendar-panel{margin-bottom:0}
+.live-calendar-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain}
+.live-calendar-scroll .month-calendar{min-width:620px}
+.live-month-entry{display:flex;align-items:center;gap:6px;border-left:2px solid var(--task-color);background:color-mix(in srgb,var(--task-color) 15%,#161e18);color:#e4ebdf;text-align:left}
+.live-month-entry i{display:inline-block;flex:none;width:5px;height:5px;border-radius:50%;background:var(--task-color)}
+.month-cell.has-deadlines .cell-count{min-width:18px;text-align:center;background:#2b4125;color:#d7ff5f;border-radius:4px;font:700 10px var(--mono);padding:3px 4px}
+.month-cell .cell-count{color:#71816e}
+.calendar-extra{font:10px var(--mono);color:#a7bb9f;margin-top:5px;display:block}
+.live-calendar-task{border-left:2px solid var(--task-color);background:color-mix(in srgb,var(--task-color) 17%,#162016);color:#dcead4}
+.live-calendar-task i{background:var(--task-color)}
+.live-legend{display:flex;flex-wrap:wrap;margin:14px 0 0}
+.live-legend i{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px}
+.live-stage-chip{border:1px solid var(--task-color);background:color-mix(in srgb,var(--task-color) 12%,#151915);border-radius:7px;color:#d8e4d4;padding:6px 8px;font:10px var(--mono);white-space:nowrap}
+.deadline-stage-icon{width:12px;height:12px;border-radius:50%;flex:none;box-shadow:0 0 0 4px #263126}
+.live-deadline-row.is-overdue time{color:#ffb27b}
+.live-day-details{display:grid;gap:10px}
+.live-day-task{width:100%;display:flex;align-items:center;gap:12px;text-align:left;background:#19231a;border:1px solid #30432d;border-radius:10px;color:#eff6ed;padding:15px;font:12px var(--body);cursor:pointer}
+.live-day-task:hover,.live-day-task:focus-visible{border-color:#caff5b;outline:none;background:#223321}
+.live-day-task span:nth-child(2){min-width:0;flex:1}.live-day-task strong{display:block;font-size:12px}.live-day-task small{display:block;color:#a6b8a1;margin-top:6px;font-size:10px}
+@media(max-width:850px){.live-calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.live-calendar-scroll .month-cell{min-height:115px;padding:9px}.live-calendar-scroll .month-entry{font-size:9px;padding:5px 7px;height:auto;border-radius:5px}.live-calendar-scroll .month-day-header{font-size:9px;padding:13px 10px}.live-calendar-week .day-post{font-size:9px}.live-calendar-stat{padding:15px 14px}}
+@media(max-width:540px){.live-calendar-summary{gap:8px}.live-calendar-stat span{font-size:8px}.live-calendar-stat strong{font-size:24px}.live-deadline-row{grid-template-columns:16px minmax(0,1fr) auto;gap:10px}.live-deadline-row .live-stage-chip{display:none}.live-deadline-row time{display:block;font-size:10px}.live-legend{gap:9px;font-size:10px}.live-demand-week .day-post{font-size:0;justify-content:center}.live-day-task{padding:12px}}
