@@ -60,3 +60,12 @@ body.client-session .app-shell,body.client-session #toast-root,body.client-sessi
 .cp-assistant-form textarea:focus-visible{outline:2px solid #d6fc65;outline-offset:2px}
 .cp-assistant-form .cp-btn{justify-content:center}
 .cp-assistant-disclaimer{font-size:10px;line-height:1.7;color:#81927c}
+
+
+/* Client assistant deliberately paused while developing AI */
+.cp-assistant-coming{border-color:#426038;gap:19px;position:relative;overflow:hidden}
+.cp-assistant-coming .cp-assistant-head h2{font-size:27px}
+.cp-assistant-coming-body{padding:17px 16px;background:#1d2c1b;border:1px dashed #587044;border-radius:11px}
+.cp-assistant-coming-tag{display:inline-block;color:#d9ff84;border:1px solid #71944a;border-radius:6px;font:700 9px monospace;letter-spacing:.06em;padding:6px 9px;margin-bottom:13px}
+.cp-assistant-coming-body p{color:#b8c8af;font-size:11px;line-height:1.8;margin:0 0 13px}
+.cp-assistant-coming-body small{font:9px/1.7 monospace;color:#91a38a;letter-spacing:.025em}

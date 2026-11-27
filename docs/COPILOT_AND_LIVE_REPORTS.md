@@ -1,4 +1,6 @@
 # UXDriven Social Studio — relatórios operacionais e Copilot
+> **Estado atual (27/11/2026): IA EM DESENVOLVIMENTO.** Por decisão da UXDriven, Studio IA, Agentes de IA e Assistente do Cliente exibem telas informativas e **não aceitam prompts**. O endpoint `POST /api/assistant` retorna `503 ai_in_development` antes de qualquer chamada de banco ou modelo, inclusive quando variáveis de IA estiverem configuradas. Nenhuma chamada paga a modelos é realizada por esta versão. As seções Demandas, Calendário e Relatórios operacionais continuam habilitadas. Os trechos abaixo descrevem a arquitetura preparada para uma ativação futura, não funcionalidades de IA já liberadas.
+
 
 ## Estado da implementação
 - **Relatórios / Production:** métricas reais de tarefas do Supabase, prazos, etapas, volume de demandas, retornos de cliente no período e distribuição por cliente. Nenhuma métrica de Instagram/LinkedIn é inventada.

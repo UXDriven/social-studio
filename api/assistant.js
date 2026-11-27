@@ -113,6 +113,13 @@ export default async function handler(req,res){
     return respond(res,403,{error:'origin_denied'});
   const jwt=(req.headers.authorization||'').match(/^Bearer\s+([\w-]+\.[\w-]+\.[\w-]+)$/i)?.[1];
   if(!jwt)return respond(res,401,{error:'login_required'});
+  // Product-wide pause: deliberately refuse all assistant requests before
+  // loading business data or calling any AI provider, regardless of Vercel env flags.
+  // This must be removed only as part of an explicit, reviewed future release.
+  return respond(res,503,{
+    error:'ai_in_development',
+    reply:'O Studio IA está em desenvolvimento. Nenhuma chamada de inteligência artificial está habilitada.'
+  });
   const body=typeof req.body==='string'?(()=>{try{return JSON.parse(req.body);}catch{return {};}})():req.body;
   const message=body&&typeof body.message==='string'?body.message.trim():'';
   if(!message||message.length>1600)return respond(res,400,{error:'invalid_message'});
